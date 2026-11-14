@@ -98,7 +98,9 @@ uvicorn llmw_codebook.api:app --port 8000 --reload
 ├── benchmarks/                    # Reproducible JSON results & Markdown summary
 ├── docs/
 │   ├── ROADMAP.md                 # Completed 5-phase engineering roadmap
-│   └── PORTFOLIO_SHOWCASE.md      # Resume bullets, LinkedIn posts, demo script & interview Q&A
+│   ├── PORTFOLIO_SHOWCASE.md      # Resume bullets, LinkedIn posts, demo script & interview Q&A
+│   ├── devto_article.md           # Ready-to-publish interactive Dev.to deep-dive article
+│   └── assets/devto/              # 1000x420 banner + Studio screenshots for Dev.to / README
 ├── papers/README.md               # Reference paper metadata & download instructions
 ├── scripts/                       # Benchmark runner & web asset exporter
 ├── src/llmw_codebook/             # Python package + FastAPI bridge + Rust ctypes accelerator
@@ -111,4 +113,5 @@ uvicorn llmw_codebook.api:app --port 8000 --reload
 
 - Full milestone history: [docs/ROADMAP.md](docs/ROADMAP.md) (Phases 1–5 completed)
 - Recruiter bullets, GitHub Pages activation guide & LinkedIn posts: [docs/PORTFOLIO_SHOWCASE.md](docs/PORTFOLIO_SHOWCASE.md)
+- Interactive Dev.to article draft + visuals: [docs/devto_article.md](docs/devto_article.md)
 - Reference paper license: GNU GPLv3 ([LICENSE](LICENSE))

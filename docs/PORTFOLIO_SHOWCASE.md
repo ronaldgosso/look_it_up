@@ -68,7 +68,7 @@ The deployment workflow in [`.github/workflows/pages.yml`](../.github/workflows/
 ## 4. 45-Second Demo Video / GIF Script (For LinkedIn Upload)
 
 1. **0:00–0:10 (Playground Embed):** Click **Embed & Generate** with default `n=12, u=127, Linear GF(2), Levenshtein`. Show the $V_1/V_0$ token ribbon turning green/red and step through **Logit-Bias Step Inspector** with `Next Flip`.
-2. **0:10–0:25 (Frameshift Showdown):** Click **Word Deletion (10%)**. Highlight the side-by-side verdict: **Hamming fails with `WRONG (...)`** due to frameshift while **Levenshtein shows `FRAMESHIFT RECOVERED`** and trace the red `-` deletion gap in the Two-Track Edit Alignment ribbon.
+2. **0:10–0:25 (Frameshift Showdown):** Click **Word Deletion (10%)**. Highlight the side-by-side verdict: **Hamming fails with `WRONG (...)`** due to frameshift while **Levenshtein shows `FRAMESHIFT RECOVERED`** and trace the cyan `+` alignment gaps in the Two-Track Edit Alignment ribbon.
 3. **0:25–0:35 (Benchmarks Tab):** Switch to **Benchmarks** to show `55.94x` Rust speedup bars and the Appendix B attack matrix.
 4. **0:35–0:45 (Codebook Inspector Tab):** Switch to **Codebook Inspector**, pan across the Linear **ZERO SPREAD** vs. RNG distance spectrum histogram, and click `Max Guarantee: Inject t Flips` in the BCH sandbox to show Berlekamp–Massey instant correction vs. `Inject 1 Deletion Frameshift`.
 
@@ -86,3 +86,18 @@ The deployment workflow in [`.github/workflows/pages.yml`](../.github/workflows/
    Algebraic BCH decoding scales to huge payload spaces (e.g., $n=24$ or $32$ bits in `0.027 ms`) and guarantees fixing up to $t$ bit flips, whereas exhaustive Levenshtein handles token deletions/insertions at the cost of $O(2^n)$ lookup — both are exposed cleanly in the same unified interface.
 5. **Dual-Target Architecture (`llmw-core`):**
    Isolating zero-dependency Rust math into `llmw-core` allowed identical bit-exact verification across three environments: Python unit tests (`pytest` via `ctypes`), native multi-threaded CLI benchmarks (`llmw-bench`), and a zero-server WebAssembly browser frontend (`llmw_wasm.wasm`).
+
+---
+
+## 6. Dev.to Interactive Article (`docs/devto_article.md`)
+
+A complete, formatted interactive post with spoilers (`{% details %}`), repository embed (`{% github %}`), cover art, and 5 real Studio UI screenshots lives at [`docs/devto_article.md`](devto_article.md) with all PNGs in [`docs/assets/devto/`](assets/devto/):
+
+- `cover.png` (`1000x420` Dev.to banner)
+- `01-playground-logit-inspector.png` (Stage 1 token stream & `Logit-Bias Step Inspector`)
+- `02-playground-frameshift-recovery.png` (10% Word Deletion -> Hamming/BCH failure vs. Levenshtein alignment recovery)
+- `03-benchmarks-speedup.png` (`55.9x` Rust speedup & Appendix B recovery matrix)
+- `04-codebook-zero-spread.png` (Linear $\mathrm{GF}(2)$ `ZERO SPREAD` vs. RNG histogram)
+- `05-bch-analyzer-sandbox.png` (Shortened BCH capacity curves & interactive `t=27` Berlekamp–Massey sandbox)
+
+To publish: open **dev.to/new**, paste the raw Markdown from `docs/devto_article.md`, toggle `published: true`, and either keep the `raw.githubusercontent.com/.../main/...` image URLs (active as soon as merged to `main`) or drag-and-drop the files from `docs/assets/devto/` directly into Dev.to's image uploader.
