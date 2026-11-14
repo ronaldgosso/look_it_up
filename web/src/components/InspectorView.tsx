@@ -66,38 +66,38 @@ export function InspectorView({ config, watermark, info, wasm }: InspectorViewPr
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
+      <section aria-labelledby="inspector-bounds-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-4">
-          <div>
-            <span className="font-mono text-[11px] font-medium tracking-wider text-emerald-400 uppercase">
-              Codebook Geometry · Sections IV &amp; V
-            </span>
-            <h2 className="text-base font-semibold text-slate-100 text-balance">
-              Theoretical Bounds, Minimum Distance &amp; BCH Algebra
-            </h2>
-          </div>
-          <span className="rounded bg-[#272F42] px-2.5 py-1 font-mono text-xs text-slate-300 tabular-nums">
+          <h2 id="inspector-bounds-heading" className="text-base font-semibold text-ink text-balance">
+            Theoretical Bounds, Minimum Distance &amp; BCH Algebra
+          </h2>
+          <span className="rounded border border-border bg-surface-inset px-2.5 py-1 font-mono text-xs text-ink-secondary tabular-nums">
             Rate R = {(config.n / config.u).toFixed(4)} bits/token
           </span>
         </div>
 
         {!info ? (
-          <div className="text-xs text-slate-400">Computing codebook invariants...</div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true">
+            <div className="h-20 animate-pulse rounded-lg border border-border bg-surface-inset" />
+            <div className="h-20 animate-pulse rounded-lg border border-border bg-surface-inset" />
+            <div className="h-20 animate-pulse rounded-lg border border-border bg-surface-inset" />
+            <div className="h-20 animate-pulse rounded-lg border border-border bg-surface-inset" />
+          </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <BoundCard
+          <dl className="grid divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface-inset sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
+            <BoundCell
               icon={Shield}
               title="Random Collision Bound"
               value={formatCollisionBound(info.collision_exponent, info.collision_bound)}
               detail={`2^(2n - u - 1) for |C|=2^${info.n}, u=${info.u}`}
             />
-            <BoundCard
+            <BoundCell
               icon={Binary}
               title="Gilbert-Varshamov d_GV"
               value={`${info.gilbert_varshamov_d} bits`}
               detail={`${((info.gilbert_varshamov_d / info.u) * 100).toFixed(1)}% normalized distance`}
             />
-            <BoundCard
+            <BoundCell
               icon={Binary}
               title="Exact Linear d_min"
               value={info.exact_linear_d_min !== null ? `${info.exact_linear_d_min} bits` : 'N/A'}
@@ -109,7 +109,7 @@ export function InspectorView({ config, watermark, info, wasm }: InspectorViewPr
                     : 'Minimum nonzero codeword weight'
               }
             />
-            <BoundCard
+            <BoundCell
               icon={Shield}
               title={`Shortened BCH GF(2^${info.bch.field_degree})`}
               value={`t = ${info.bch.correction_capability} bits`}
@@ -117,7 +117,7 @@ export function InspectorView({ config, watermark, info, wasm }: InspectorViewPr
                 info.bch.correction_rate * 100
               ).toFixed(1)}%`}
             />
-          </div>
+          </dl>
         )}
       </section>
 
@@ -142,30 +142,34 @@ export function InspectorView({ config, watermark, info, wasm }: InspectorViewPr
       )}
 
       {comparison && (
-        <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
+        <section aria-labelledby="inspector-pair-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-4">
             <div className="flex items-center gap-2">
-              <GitCompare className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-              <h3 className="text-sm font-semibold text-slate-100">
+              <GitCompare className="size-4 text-accent" aria-hidden="true" />
+              <h3 id="inspector-pair-heading" className="text-sm font-semibold text-ink">
                 Adjacent Codeword Pair Separation (ID {comparison.baseId} vs ID {comparison.neighborId})
               </h3>
             </div>
-            <div className="flex gap-3 font-mono text-xs tabular-nums">
-              <span className="rounded bg-[#0F172A] px-2.5 py-1 text-slate-200">
-                d_H = <strong className="text-emerald-300">{comparison.hamming}</strong>
+            <div className="flex gap-2.5 font-mono text-xs tabular-nums">
+              <span className="rounded border border-border bg-surface-inset px-2.5 py-1 text-ink-secondary">
+                d_H = <strong className="text-accent-ink">{comparison.hamming}</strong>
               </span>
-              <span className="rounded bg-[#0F172A] px-2.5 py-1 text-slate-200">
-                d_L = <strong className="text-emerald-300">{comparison.levenshtein}</strong>
+              <span className="rounded border border-border bg-surface-inset px-2.5 py-1 text-ink-secondary">
+                d_L = <strong className="text-accent-ink">{comparison.levenshtein}</strong>
               </span>
             </div>
           </div>
 
-          <div className="space-y-3 rounded-lg border border-slate-800 bg-[#0F172A] p-3">
+          <div className="space-y-3 rounded-lg border border-border bg-surface-inset p-3.5">
             <BitRow label={`C(${comparison.baseId})`} bits={comparison.codeA} />
             <BitRow label={`C(${comparison.neighborId})`} bits={comparison.codeB} />
             <div className="flex items-start gap-2 pt-1">
-              <span className="w-20 shrink-0 font-mono text-[11px] text-amber-300">Diff Mask</span>
-              <div className="flex flex-wrap gap-0.5">
+              <span className="w-20 shrink-0 font-mono text-xs text-warning-ink">Diff Mask</span>
+              <div
+                role="img"
+                aria-label={`Bitwise difference mask with ${comparison.hamming} differing positions`}
+                className="flex flex-wrap gap-0.5"
+              >
                 {Array.from(comparison.codeA).map((bit, idx) => {
                   const differs = (bit & 1) !== (comparison.codeB[idx] & 1)
                   return (
@@ -173,7 +177,7 @@ export function InspectorView({ config, watermark, info, wasm }: InspectorViewPr
                       key={idx}
                       className={cn(
                         'h-2.5 w-1.5 rounded-[1px]',
-                        differs ? 'bg-amber-400' : 'bg-slate-800',
+                        differs ? 'bg-amber-400' : 'bg-surface-elevated',
                       )}
                     />
                   )
@@ -187,7 +191,7 @@ export function InspectorView({ config, watermark, info, wasm }: InspectorViewPr
   )
 }
 
-function BoundCard({
+function BoundCell({
   icon: Icon,
   title,
   value,
@@ -199,15 +203,13 @@ function BoundCard({
   detail: string
 }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-[#0F172A] p-3.5">
-      <div className="flex items-center gap-1.5 text-xs text-slate-400">
-        <Icon className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+    <div className="p-3.5 sm:p-4">
+      <dt className="flex items-center gap-1.5 text-xs text-ink-secondary">
+        <Icon className="size-3.5 text-accent" aria-hidden="true" />
         <span>{title}</span>
-      </div>
-      <div className="mt-1.5 font-mono text-base font-semibold text-slate-100 tabular-nums">
-        {value}
-      </div>
-      <p className="mt-1 text-[11px] text-slate-400 text-pretty">{detail}</p>
+      </dt>
+      <dd className="mt-1.5 font-mono text-base font-semibold text-ink tabular-nums">{value}</dd>
+      <dd className="mt-1 text-xs text-ink-muted text-pretty">{detail}</dd>
     </div>
   )
 }
@@ -215,14 +217,18 @@ function BoundCard({
 function BitRow({ label, bits }: { label: string; bits: Uint8Array }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="w-20 shrink-0 font-mono text-[11px] text-slate-400 tabular-nums">{label}</span>
-      <div className="flex flex-wrap gap-0.5">
+      <span className="w-20 shrink-0 font-mono text-xs text-ink-secondary tabular-nums">{label}</span>
+      <div
+        role="img"
+        aria-label={`${label}: ${bits.length} codeword bits`}
+        className="flex flex-wrap gap-0.5"
+      >
         {Array.from(bits).map((b, idx) => (
           <span
             key={idx}
             className={cn(
               'h-2.5 w-1.5 rounded-[1px]',
-              (b & 1) === 1 ? 'bg-emerald-500' : 'bg-red-500/75',
+              (b & 1) === 1 ? 'bg-emerald-500' : 'bg-rose-500/75',
             )}
           />
         ))}

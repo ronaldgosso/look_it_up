@@ -1,4 +1,4 @@
-import { BarChart3, Gauge, RefreshCw, ShieldAlert, Sparkles } from 'lucide-react'
+import { BarChart3, Gauge, RefreshCw, Scale, ShieldAlert } from 'lucide-react'
 import type { BenchmarkResults } from '../types/studio'
 import { cn } from '../utils/cn'
 
@@ -9,6 +9,27 @@ interface BenchmarksViewProps {
   refreshing: boolean
 }
 
+const ATTACK_LABELS: Record<string, string> = {
+  clean: 'Clean (No Attack)',
+  word_deletion: 'Word Deletion',
+  word_insertion: 'Word Insertion',
+  synonym_swap: 'Synonym Swap',
+  paraphrase: 'Paraphrase',
+}
+
+const METHOD_COLUMNS: Array<{ key: string; label: string }> = [
+  { key: 'levenshtein', label: 'Levenshtein d_L' },
+  { key: 'hamming', label: 'Hamming d_H' },
+  { key: 'bch', label: 'Shortened BCH' },
+]
+
+function formatQualityLabel(rawKey: string): string {
+  return rawKey
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('-')
+}
+
 export function BenchmarksView({
   benchmarks,
   apiConnected,
@@ -17,8 +38,13 @@ export function BenchmarksView({
 }: BenchmarksViewProps) {
   if (!benchmarks) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-[#1B2336] p-8 text-center text-sm text-slate-400">
-        Loading static benchmark snapshot (`benchmarks.json`)...
+      <div className="space-y-4" aria-busy="true" aria-label="Loading benchmark snapshot">
+        <div className="h-20 animate-pulse rounded-xl border border-border bg-surface p-4" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="h-36 animate-pulse rounded-xl border border-border bg-surface" />
+          <div className="h-36 animate-pulse rounded-xl border border-border bg-surface" />
+        </div>
+        <div className="h-64 animate-pulse rounded-xl border border-border bg-surface" />
       </div>
     )
   }
@@ -28,19 +54,33 @@ export function BenchmarksView({
   const regimes = benchmarks.entropy_regime_match_rate
   const quality = benchmarks.quality_comparison
 
+  const attackOrder: string[] = []
+  const byAttack = new Map<
+    string,
+    Map<string, { match_rate: number; mean_distance: number; samples: number }>
+  >()
+  for (const row of benchmarks.attack_robustness) {
+    if (!byAttack.has(row.attack)) {
+      byAttack.set(row.attack, new Map())
+      attackOrder.push(row.attack)
+    }
+    byAttack.get(row.attack)!.set(row.method.toLowerCase(), {
+      match_rate: row.match_rate,
+      mean_distance: row.mean_distance,
+      samples: row.samples,
+    })
+  }
+
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-[#1B2336] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-4 sm:p-5">
         <div>
-          <span className="font-mono text-[11px] font-medium tracking-wider text-emerald-400 uppercase">
-            Reproducible Evaluation · benchmarks/results.json
-          </span>
-          <h2 className="text-base font-semibold text-slate-100 text-balance">
+          <h2 className="text-base font-semibold text-ink text-balance">
             Rust Speedups, Appendix B Robustness &amp; AUROC Analysis
           </h2>
-          <p className="mt-0.5 font-mono text-xs text-slate-400 tabular-nums">
+          <p className="mt-1 font-mono text-xs text-ink-muted tabular-nums">
             n={benchmarks.config.n} | u={benchmarks.config.u} | delta={benchmarks.config.delta} | budget=
-            {(benchmarks.config.attack_budget * 100).toFixed(0)}% | samples={benchmarks.config.num_samples} | backend=
+            {(benchmarks.config.attack_budget * 100).toFixed(0)}% | samples={benchmarks.config.num_samples} |{' '}
             {benchmarks.system.backend} ({benchmarks.system.threads}T)
           </p>
         </div>
@@ -52,20 +92,19 @@ export function BenchmarksView({
           title={
             apiConnected
               ? 'Fetch live benchmark snapshot from Local Python API'
-              : 'Connect Local Python API on :8000 to refresh live results'
+              : 'Start the local FastAPI server on :8000 to run live benchmarks'
           }
-          className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-[#272F42] px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:border-emerald-500/50 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-45"
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border-strong bg-surface-elevated px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-emerald-500/60 hover:text-accent-ink disabled:opacity-45"
         >
-          <RefreshCw className={cn('h-3.5 w-3.5', refreshing && 'animate-spin')} aria-hidden="true" />
+          <RefreshCw className={cn('size-3.5', refreshing && 'animate-spin')} aria-hidden="true" />
           <span>{apiConnected ? 'Refresh from API' : 'Static Snapshot'}</span>
         </button>
       </div>
 
-      {/* Rust vs Python Extraction Speed */}
-      <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
+      <section aria-labelledby="bench-speed-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex items-center gap-2 pb-3">
-          <Gauge className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-slate-100">
+          <Gauge className="size-4 text-accent" aria-hidden="true" />
+          <h3 id="bench-speed-heading" className="text-sm font-semibold text-ink">
             Codebook Extraction Speed ({speed.entries.toLocaleString()} codewords, u={speed.u})
           </h3>
         </div>
@@ -86,132 +125,195 @@ export function BenchmarksView({
         </div>
       </section>
 
-      {/* Attack Robustness Matrix */}
-      <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
-        <div className="flex items-center gap-2 pb-3">
-          <ShieldAlert className="h-4 w-4 text-amber-400" aria-hidden="true" />
-          <h3 className="text-sm font-semibold text-slate-100">
-            Appendix B Attack Recovery Matrix
-          </h3>
+      <section aria-labelledby="bench-attack-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="size-4 text-warning" aria-hidden="true" />
+            <h3 id="bench-attack-heading" className="text-sm font-semibold text-ink">
+              Appendix B Attack Recovery Comparison
+            </h3>
+          </div>
+          <span className="font-mono text-xs text-ink-muted tabular-nums">
+            Match rate &amp; mean distance ({benchmarks.config.num_samples} samples/cell)
+          </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="studio-scroll overflow-x-auto rounded-lg border border-border bg-surface-inset">
           <table className="w-full text-left font-mono text-xs tabular-nums">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400">
-                <th className="py-2 pr-4 font-medium">Decoder</th>
-                <th className="py-2 pr-4 font-medium">Channel Attack</th>
-                <th className="py-2 pr-4 font-medium">Match Rate</th>
-                <th className="py-2 pr-4 font-medium">Mean Dist</th>
-                <th className="py-2 font-medium">Samples</th>
+              <tr className="border-b border-border text-ink-muted">
+                <th scope="col" className="px-3.5 py-2.5 font-sans text-xs font-medium">
+                  Channel Attack
+                </th>
+                {METHOD_COLUMNS.map((col) => (
+                  <th key={col.key} scope="col" className="px-3.5 py-2.5 font-sans text-xs font-medium">
+                    {col.label}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/70">
-              {benchmarks.attack_robustness.map((row, idx) => (
-                <tr key={idx} className="hover:bg-[#0F172A]/60">
-                  <td className="py-2 pr-4 text-slate-200 uppercase">{row.method}</td>
-                  <td className="py-2 pr-4 text-slate-300">{row.attack}</td>
-                  <td className="py-2 pr-4">
-                    <span
-                      className={cn(
-                        'font-semibold',
-                        row.match_rate >= 0.85
-                          ? 'text-emerald-300'
-                          : row.match_rate >= 0.5
-                            ? 'text-amber-300'
-                            : 'text-red-300',
-                      )}
-                    >
-                      {(row.match_rate * 100).toFixed(1)}%
-                    </span>
-                  </td>
-                  <td className="py-2 pr-4 text-slate-300">{row.mean_distance.toFixed(2)}</td>
-                  <td className="py-2 text-slate-400">{row.samples}</td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-border/80">
+              {attackOrder.map((attackKey) => {
+                const methodsMap = byAttack.get(attackKey)!
+                return (
+                  <tr key={attackKey} className="transition-colors hover:bg-surface/60">
+                    <th scope="row" className="px-3.5 py-3 font-sans text-xs font-medium text-ink">
+                      {ATTACK_LABELS[attackKey] ?? attackKey}
+                    </th>
+                    {METHOD_COLUMNS.map((col) => {
+                      const stats = methodsMap.get(col.key)
+                      if (!stats) {
+                        return (
+                          <td key={col.key} className="px-3.5 py-3 text-ink-muted">
+                            N/A
+                          </td>
+                        )
+                      }
+                      const pct = stats.match_rate * 100
+                      return (
+                        <td key={col.key} className="px-3.5 py-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span
+                              className={cn(
+                                'font-semibold',
+                                stats.match_rate >= 0.85
+                                  ? 'text-accent-ink'
+                                  : stats.match_rate >= 0.5
+                                    ? 'text-warning-ink'
+                                    : 'text-danger-ink',
+                              )}
+                            >
+                              {pct.toFixed(1)}%
+                            </span>
+                            <span className="text-ink-muted">d={stats.mean_distance.toFixed(1)}</span>
+                          </div>
+                          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated">
+                            <div
+                              className={cn(
+                                'h-full rounded-full',
+                                stats.match_rate >= 0.85
+                                  ? 'bg-emerald-500'
+                                  : stats.match_rate >= 0.5
+                                    ? 'bg-amber-400'
+                                    : 'bg-red-500/80',
+                              )}
+                              style={{ width: `${Math.max(2, pct)}%` }}
+                            />
+                          </div>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
       </section>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        {/* Zero-Bit Detection ROC AUROC */}
-        <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
+        <section aria-labelledby="bench-auroc-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
           <div className="flex items-center gap-2 pb-3">
-            <BarChart3 className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-            <h3 className="text-sm font-semibold text-slate-100">
-              Detection AUROC &amp; TPR @ 1% FPR
+            <BarChart3 className="size-4 text-accent" aria-hidden="true" />
+            <h3 id="bench-auroc-heading" className="text-sm font-semibold text-ink">
+              Detection AUROC &amp; TPR at 1% FPR
             </h3>
           </div>
 
-          <div className="space-y-2.5">
-            {rocEntries.map(([method, stats]) => (
-              <div
-                key={method}
-                className="flex items-center justify-between rounded-lg border border-slate-800 bg-[#0F172A] px-3 py-2.5 font-mono text-xs tabular-nums"
-              >
-                <span className="font-semibold text-slate-200 uppercase">{method}</span>
-                <div className="flex gap-4 text-slate-300">
-                  <span>
-                    AUROC <strong className="text-emerald-300">{stats.auroc.toFixed(3)}</strong>
-                  </span>
-                  <span>
-                    TPR@1% <strong className="text-slate-100">{(stats.tpr_at_1pct_fpr * 100).toFixed(1)}%</strong>
-                  </span>
-                  <span>tau={stats.threshold_at_1pct_fpr.toFixed(1)}</span>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-hidden rounded-lg border border-border bg-surface-inset">
+            <table className="w-full text-left font-mono text-xs tabular-nums">
+              <thead>
+                <tr className="border-b border-border text-ink-muted">
+                  <th scope="col" className="px-3.5 py-2 font-sans text-xs font-medium">
+                    Decoder
+                  </th>
+                  <th scope="col" className="px-3.5 py-2 font-sans text-xs font-medium">
+                    AUROC
+                  </th>
+                  <th scope="col" className="px-3.5 py-2 font-sans text-xs font-medium">
+                    TPR at 1% FPR
+                  </th>
+                  <th scope="col" className="px-3.5 py-2 font-sans text-xs font-medium">
+                    Threshold
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/80">
+                {rocEntries.map(([method, stats]) => (
+                  <tr key={method}>
+                    <th scope="row" className="px-3.5 py-2.5 font-semibold text-ink uppercase">
+                      {method}
+                    </th>
+                    <td className="px-3.5 py-2.5 font-semibold text-accent-ink">
+                      {stats.auroc.toFixed(3)}
+                    </td>
+                    <td className="px-3.5 py-2.5 text-ink">
+                      {(stats.tpr_at_1pct_fpr * 100).toFixed(1)}%
+                    </td>
+                    <td className="px-3.5 py-2.5 text-ink-muted">
+                      tau = {stats.threshold_at_1pct_fpr.toFixed(1)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
-        {/* Entropy Regime & Lexical Diversity */}
-        <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
+        <section aria-labelledby="bench-quality-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
           <div className="flex items-center gap-2 pb-3">
-            <Sparkles className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-            <h3 className="text-sm font-semibold text-slate-100">
+            <Scale className="size-4 text-accent" aria-hidden="true" />
+            <h3 id="bench-quality-heading" className="text-sm font-semibold text-ink">
               Entropy Regimes &amp; Appendix G Lexical Quality
             </h3>
           </div>
 
           <div className="space-y-3 font-mono text-xs tabular-nums">
-            <div className="rounded-lg border border-slate-800 bg-[#0F172A] p-3">
-              <div className="mb-1.5 text-[11px] text-slate-400">Match Rate by Entropy Regime</div>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-border bg-surface-inset p-3.5">
+              <div className="mb-2 font-sans text-xs font-medium text-ink-secondary">
+                Match Rate by Entropy Regime
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <span className="text-slate-400">Base (High H): </span>
-                  {Object.entries(regimes.base).map(([k, v]) => (
-                    <span key={k} className="mr-2 text-emerald-300">
-                      {k}={(v * 100).toFixed(0)}%
-                    </span>
-                  ))}
+                  <div className="text-ink-muted">Base (High H):</div>
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-accent-ink">
+                    {Object.entries(regimes.base).map(([k, v]) => (
+                      <span key={k}>
+                        {k}={(v * 100).toFixed(0)}%
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div>
-                  <span className="text-slate-400">Instruct (Low H): </span>
-                  {Object.entries(regimes.instruct).map(([k, v]) => (
-                    <span key={k} className="mr-2 text-amber-300">
-                      {k}={(v * 100).toFixed(0)}%
-                    </span>
-                  ))}
+                  <div className="text-ink-muted">Instruct (Low H):</div>
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-warning-ink">
+                    {Object.entries(regimes.instruct).map(([k, v]) => (
+                      <span key={k}>
+                        {k}={(v * 100).toFixed(0)}%
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-lg border border-slate-800 bg-[#0F172A] p-3">
-              <div className="mb-1.5 text-[11px] text-slate-400">
+            <div className="rounded-lg border border-border bg-surface-inset p-3.5">
+              <div className="mb-2 font-sans text-xs font-medium text-ink-secondary">
                 Lexical Diversity (Watermarked vs Unwatermarked)
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <dl className="grid grid-cols-3 gap-3">
                 {Object.keys(quality.watermarked).map((metric) => (
                   <div key={metric}>
-                    <div className="text-[10px] text-slate-500">{metric}</div>
-                    <div className="text-slate-100">
+                    <dt className="font-sans text-xs text-ink-muted">{formatQualityLabel(metric)}</dt>
+                    <dd className="mt-0.5 font-semibold text-ink">
                       {quality.watermarked[metric].toFixed(3)}{' '}
-                      <span className="text-slate-500">vs {(quality.non_watermarked[metric] ?? 0).toFixed(3)}</span>
-                    </div>
+                      <span className="font-normal text-ink-muted">
+                        vs {(quality.non_watermarked[metric] ?? 0).toFixed(3)}
+                      </span>
+                    </dd>
                   </div>
                 ))}
-              </div>
+              </dl>
             </div>
           </div>
         </section>
@@ -236,34 +338,34 @@ function SpeedComparisonCard({
   const rustPct = rustMs !== undefined ? Math.max(2, Math.min(100, (rustMs / maxVal) * 100)) : 0
 
   return (
-    <div className="space-y-3 rounded-lg border border-slate-800 bg-[#0F172A] p-3.5">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-200">{title}</span>
+    <div className="space-y-3 rounded-lg border border-border bg-surface-inset p-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-ink">{title}</span>
         {speedup !== undefined && (
-          <span className="rounded bg-emerald-500/15 px-2 py-0.5 font-mono text-xs font-semibold text-emerald-300 tabular-nums">
+          <span className="rounded border border-emerald-500/35 bg-emerald-500/15 px-2 py-0.5 font-mono text-xs font-semibold text-accent-ink tabular-nums">
             {speedup.toFixed(1)}x faster
           </span>
         )}
       </div>
 
-      <div className="space-y-2 font-mono text-xs tabular-nums">
+      <div className="space-y-2.5 font-mono text-xs tabular-nums">
         <div>
-          <div className="mb-1 flex justify-between text-slate-400">
+          <div className="mb-1 flex justify-between text-ink-secondary">
             <span>Pure Python</span>
             <span>{pythonMs.toFixed(2)} ms</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded bg-[#272F42]">
-            <div className="h-full bg-slate-400" style={{ width: `${pythonPct}%` }} />
+          <div className="h-2 w-full overflow-hidden rounded-full bg-surface-elevated">
+            <div className="h-full rounded-full bg-slate-400" style={{ width: `${pythonPct}%` }} />
           </div>
         </div>
 
         <div>
-          <div className="mb-1 flex justify-between text-emerald-300">
+          <div className="mb-1 flex justify-between text-accent-ink">
             <span>Rust Rayon Native</span>
             <span>{rustMs !== undefined ? `${rustMs.toFixed(2)} ms` : 'N/A'}</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded bg-[#272F42]">
-            <div className="h-full bg-emerald-500" style={{ width: `${rustPct}%` }} />
+          <div className="h-2 w-full overflow-hidden rounded-full bg-surface-elevated">
+            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${rustPct}%` }} />
           </div>
         </div>
       </div>

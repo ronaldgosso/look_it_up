@@ -7,7 +7,9 @@ import {
   FlaskConical,
   Menu,
   Server,
+  X,
 } from 'lucide-react'
+import type { KeyboardEvent } from 'react'
 import type { RuntimeMode } from '../types/studio'
 import { cn } from '../utils/cn'
 
@@ -46,26 +48,46 @@ export function HeaderBar({
 }: HeaderBarProps) {
   const wasmKb = wasmByteLength !== null ? `${(wasmByteLength / 1024).toFixed(1)} KB` : null
 
+  const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let nextIndex: number | null = null
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % TABS.length
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + TABS.length) % TABS.length
+    else if (event.key === 'Home') nextIndex = 0
+    else if (event.key === 'End') nextIndex = TABS.length - 1
+
+    if (nextIndex !== null) {
+      event.preventDefault()
+      const nextTab = TABS[nextIndex]
+      onSelectTab(nextTab.id)
+      document.getElementById(`tab-${nextTab.id}`)?.focus()
+    }
+  }
+
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#0F172A]/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3">
+    <header className="z-30 border-b border-border bg-canvas/95 backdrop-blur-sm lg:sticky lg:top-0">
+      <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onToggleSidebar}
-            aria-label={sidebarOpen ? 'Hide configuration sidebar' : 'Show configuration sidebar'}
+            aria-label={sidebarOpen ? 'Hide scheme parameters drawer' : 'Show scheme parameters drawer'}
             aria-expanded={sidebarOpen}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-700 bg-[#1B2336] text-slate-300 transition-colors hover:border-slate-500 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 lg:hidden"
+            aria-controls="scheme-config-sidebar"
+            className="inline-flex size-9 items-center justify-center rounded-md border border-border-strong bg-surface text-ink-secondary transition-colors hover:border-ink-muted hover:text-ink lg:hidden"
           >
-            <Menu className="h-4 w-4" aria-hidden="true" />
+            {sidebarOpen ? (
+              <X className="size-4" aria-hidden="true" />
+            ) : (
+              <Menu className="size-4" aria-hidden="true" />
+            )}
           </button>
 
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-emerald-500/40 bg-[#0F172A] p-1">
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-emerald-500/35 bg-surface-inset p-1.5">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 256 256"
-                className="h-full w-full"
+                className="size-full"
                 aria-hidden="true"
               >
                 <path fill="#F8FAFC" d="M 24 62 H 50 L 115 127 V 216 H 102 L 24 138 Z" />
@@ -75,62 +97,80 @@ export function HeaderBar({
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-sm font-semibold tracking-tight text-slate-100 sm:text-base text-balance">
+                <h1 className="text-sm font-semibold text-ink sm:text-base text-balance">
                   Look It Up Studio
                 </h1>
                 <a
                   href="https://arxiv.org/abs/2611.16890"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded border border-slate-700 bg-[#1B2336] px-1.5 py-0.5 font-mono text-[11px] text-slate-300 transition-colors hover:border-emerald-500/50 hover:text-emerald-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+                  className="inline-flex items-center gap-1 rounded border border-border-strong bg-surface px-2 py-0.5 font-mono text-xs text-ink-secondary transition-colors hover:border-emerald-500/60 hover:text-accent-ink"
                 >
                   <span>arXiv:2611.16890</span>
-                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  <ExternalLink className="size-3" aria-hidden="true" />
                 </a>
               </div>
-              <p className="hidden text-xs text-slate-400 sm:block">
-                Multi-bit LLM Watermarking via Codebook Search (Rust + WASM)
+              <p className="hidden text-xs text-ink-muted sm:block">
+                Multi-bit LLM Watermarking via Codebook Search
               </p>
             </div>
           </div>
         </div>
 
-        <nav aria-label="Studio sections" className="flex items-center gap-1 rounded-lg border border-slate-800 bg-[#1B2336] p-1">
-          {TABS.map(({ id, label, icon: Icon }) => {
+        <div
+          role="tablist"
+          aria-label="Studio workspace views"
+          className="flex w-full items-center justify-between gap-1 rounded-lg border border-border bg-surface p-1 sm:w-auto sm:justify-start"
+        >
+          {TABS.map(({ id, label, icon: Icon }, idx) => {
             const active = activeTab === id
             return (
               <button
                 key={id}
+                id={`tab-${id}`}
                 type="button"
+                role="tab"
+                aria-selected={active}
+                aria-controls={`panel-${id}`}
+                tabIndex={active ? 0 : -1}
                 onClick={() => onSelectTab(id)}
-                aria-current={active ? 'page' : undefined}
+                onKeyDown={(e) => handleTabKeyDown(e, idx)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500',
+                  'inline-flex min-h-8 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors sm:flex-initial sm:px-3',
                   active
-                    ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-500/40'
-                    : 'text-slate-400 hover:bg-[#272F42] hover:text-slate-200',
+                    ? 'bg-emerald-500/15 text-accent-ink ring-1 ring-inset ring-emerald-500/45'
+                    : 'text-ink-muted hover:bg-surface-elevated hover:text-ink',
                 )}
               >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                <span>{label}</span>
+                <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+                {id === 'inspector' ? (
+                  <>
+                    <span className="sm:hidden">Inspector</span>
+                    <span className="hidden sm:inline">{label}</span>
+                  </>
+                ) : (
+                  <span>{label}</span>
+                )}
               </button>
             )
           })}
-        </nav>
+        </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <div
+            role="status"
+            aria-live="polite"
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-[11px] tabular-nums',
+              'inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs tabular-nums',
               wasmError
-                ? 'border-red-500/40 bg-red-500/10 text-red-300'
+                ? 'border-red-500/45 bg-red-500/10 text-danger-ink'
                 : wasmReady
-                  ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-300'
-                  : 'border-slate-700 bg-[#1B2336] text-slate-400',
+                  ? 'border-emerald-500/35 bg-emerald-500/10 text-accent-ink'
+                  : 'border-border-strong bg-surface text-ink-secondary',
             )}
             title={wasmError ?? 'Client-side Rust WebAssembly runtime status'}
           >
-            <Activity className="h-3 w-3" aria-hidden="true" />
+            <Activity className="size-3.5 shrink-0" aria-hidden="true" />
             <span>
               {wasmError
                 ? 'WASM Error'
@@ -143,20 +183,20 @@ export function HeaderBar({
           <div
             role="group"
             aria-label="Execution runtime"
-            className="inline-flex rounded-md border border-slate-700 bg-[#1B2336] p-0.5 text-xs"
+            className="inline-flex rounded-md border border-border-strong bg-surface p-0.5 text-xs"
           >
             <button
               type="button"
               onClick={() => onChangeRuntimeMode('wasm')}
               aria-pressed={runtimeMode === 'wasm'}
               className={cn(
-                'inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500',
+                'inline-flex min-h-7 items-center gap-1.5 rounded px-2.5 py-1 font-medium transition-colors',
                 runtimeMode === 'wasm'
-                  ? 'bg-[#272F42] text-emerald-300'
-                  : 'text-slate-400 hover:text-slate-200',
+                  ? 'bg-surface-elevated text-accent-ink'
+                  : 'text-ink-muted hover:text-ink',
               )}
             >
-              <Cpu className="h-3.5 w-3.5" aria-hidden="true" />
+              <Cpu className="size-3.5 shrink-0" aria-hidden="true" />
               <span>WASM Browser</span>
             </button>
 
@@ -171,14 +211,14 @@ export function HeaderBar({
                   : 'Start local uvicorn server on :8000 to enable Python/Native API mode'
               }
               className={cn(
-                'inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500',
-                !apiEngine && 'cursor-not-allowed opacity-45',
+                'inline-flex min-h-7 items-center gap-1.5 rounded px-2.5 py-1 font-medium transition-colors',
+                !apiEngine && 'opacity-45',
                 runtimeMode === 'api'
-                  ? 'bg-[#272F42] text-emerald-300'
-                  : 'text-slate-400 hover:text-slate-200',
+                  ? 'bg-surface-elevated text-accent-ink'
+                  : 'text-ink-muted hover:text-ink',
               )}
             >
-              <Server className="h-3.5 w-3.5" aria-hidden="true" />
+              <Server className="size-3.5 shrink-0" aria-hidden="true" />
               <span>
                 Local API
                 {apiEngine ? ` (${apiEngine.threads}T)` : ''}

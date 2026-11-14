@@ -16,7 +16,7 @@ export function AlignmentFrameshiftPanel({
   primaryResult,
   comparison,
 }: AlignmentFrameshiftPanelProps) {
-  const [hoverOp, setHoverOp] = useState<{ idx: number; op: AlignmentOp } | null>(null)
+  const [activeColIdx, setActiveColIdx] = useState<number>(0)
 
   const hamming = comparison?.hamming ?? null
   const lev = comparison?.levenshtein ?? primaryResult
@@ -34,19 +34,24 @@ export function AlignmentFrameshiftPanel({
     { match: 0, substitute: 0, insert: 0, delete: 0 },
   )
 
+  const clampedIdx =
+    primaryResult.alignment.length > 0
+      ? Math.min(activeColIdx, primaryResult.alignment.length - 1)
+      : 0
+  const activeOp: AlignmentOp | undefined = primaryResult.alignment[clampedIdx]
+
   return (
     <div className="space-y-4">
-      {/* Side-by-side Dual Decoder Comparison */}
       {comparison && (
-        <div className="rounded-lg border border-slate-800 bg-[#0F172A] p-3.5 space-y-2.5">
+        <div className="space-y-3 rounded-lg border border-border bg-surface-inset p-3.5 sm:p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
-              <Columns3 className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+            <div className="flex items-center gap-2 text-xs font-semibold text-ink">
+              <Columns3 className="size-4 text-accent" aria-hidden="true" />
               <span>Dual-Decoder Comparison (Positional Hamming vs. Myers Levenshtein)</span>
             </div>
             {frameshiftSaved && (
-              <span className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-emerald-300">
-                <GitMerge className="h-3 w-3" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1.5 rounded border border-emerald-500/45 bg-emerald-500/15 px-2.5 py-0.5 font-mono text-xs font-semibold text-accent-ink">
+                <GitMerge className="size-3.5" aria-hidden="true" />
                 <span>FRAMESHIFT RECOVERED BY LEVENSHTEIN</span>
               </span>
             )}
@@ -60,7 +65,7 @@ export function AlignmentFrameshiftPanel({
                 targetWatermark={targetWatermark}
                 subtitle={
                   hamming.watermark !== targetWatermark && primaryResult.candidate_bits.length !== u
-                    ? 'Frameshift desync: index shift scrambles suffix bits'
+                    ? 'Frameshift desync shifts every downstream index'
                     : 'Zero-gap XOR comparison'
                 }
               />
@@ -69,120 +74,125 @@ export function AlignmentFrameshiftPanel({
               name="Levenshtein (Myers DP d_L)"
               res={lev}
               targetWatermark={targetWatermark}
-              subtitle="Aligns deletions & insertions cleanly"
+              subtitle="Aligns token deletions and insertions"
             />
             {bch && (
               <DecoderCard
                 name="Shortened BCH (GF(2^m))"
                 res={bch}
                 targetWatermark={targetWatermark}
-                subtitle="Algebraic syndrome correction (positional)"
+                subtitle="Algebraic syndrome decoding (positional)"
               />
             )}
           </div>
         </div>
       )}
 
-      {/* Two-Track Alignment Diff Tape */}
-      <div className="rounded-lg border border-slate-800 bg-[#0F172A] p-3.5 space-y-2.5">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-200">
-              Two-Track Sequence Edit Alignment
-            </span>
-            <span className="font-mono text-[11px] tabular-nums">
-              (= {counts.match} · S {counts.substitute} · + {counts.insert} · - {counts.delete})
+      <div className="space-y-3 rounded-lg border border-border bg-surface-inset p-3.5 sm:p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-ink">Two-Track Sequence Edit Alignment</span>
+            <span className="font-mono text-ink-muted tabular-nums">
+              (= {counts.match} / S {counts.substitute} / + {counts.insert} / - {counts.delete})
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 font-mono text-[10px]">
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-xs bg-emerald-500" /> = Match
+          <div className="flex flex-wrap items-center gap-3 font-mono text-xs text-ink-secondary">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-xs bg-emerald-500" aria-hidden="true" /> = Match
             </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-xs bg-amber-400" /> S Sub
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-xs bg-amber-400" aria-hidden="true" /> S Sub
             </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-xs bg-sky-400" /> + Insert Gap
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-xs bg-sky-400" aria-hidden="true" /> + Insert Gap
             </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="h-2 w-2 rounded-xs bg-red-500" /> - Deleted Codebit
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-xs bg-red-500" aria-hidden="true" /> - Deleted Codebit
             </span>
           </div>
         </div>
 
-        <div className="overflow-x-auto pb-1">
+        <div className="studio-scroll overflow-x-auto pb-1.5">
           <div className="inline-flex min-w-full items-stretch gap-2">
-            <div className="flex shrink-0 flex-col justify-between py-0.5 pr-1 font-mono text-[10px] text-slate-500">
+            <div className="flex shrink-0 flex-col justify-between py-0.5 pr-1.5 font-mono text-xs text-ink-muted">
               <span>Cand y</span>
               <span>Edit</span>
               <span>Code L_W</span>
             </div>
 
             <div className="flex flex-nowrap gap-0.5">
-              {primaryResult.alignment.map((op, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onMouseEnter={() => setHoverOp({ idx, op })}
-                  onFocus={() => setHoverOp({ idx, op })}
-                  className={cn(
-                    'flex w-3.5 shrink-0 flex-col items-center gap-0.5 rounded-[2px] py-0.5 font-mono text-[9px] leading-tight transition-colors focus:outline-none',
-                    hoverOp?.idx === idx && 'ring-1 ring-slate-200',
-                  )}
-                  title={`op #${idx} (${op.kind}): src[${op.source_idx ?? '-'}]=${op.source_bit ?? '·'} -> tgt[${op.target_idx ?? '-'}]=${op.target_bit ?? '·'}`}
-                >
-                  <span
+              {primaryResult.alignment.map((op, idx) => {
+                const isActive = clampedIdx === idx
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onMouseEnter={() => setActiveColIdx(idx)}
+                    onFocus={() => setActiveColIdx(idx)}
+                    onClick={() => setActiveColIdx(idx)}
+                    aria-label={`Column ${idx}: ${op.kind}, candidate bit ${op.source_bit ?? 'gap'}, codeword bit ${op.target_bit ?? 'gap'}`}
                     className={cn(
-                      'w-full text-center',
-                      op.source_bit === null ? 'text-slate-600' : 'text-slate-300',
+                      'flex w-4 shrink-0 flex-col items-center gap-0.5 rounded-xs py-0.5 font-mono text-[11px] leading-tight transition-colors',
+                      isActive && 'bg-surface-elevated ring-1 ring-ink-secondary',
                     )}
                   >
-                    {op.source_bit ?? '·'}
-                  </span>
-                  <span
-                    className={cn(
-                      'w-full rounded-[1px] text-center font-bold',
-                      op.kind === 'match' && 'bg-emerald-500/80 text-slate-950',
-                      op.kind === 'substitute' && 'bg-amber-400 text-slate-950',
-                      op.kind === 'insert' && 'bg-sky-400 text-slate-950',
-                      op.kind === 'delete' && 'bg-red-500 text-white',
-                    )}
-                  >
-                    {op.kind === 'match'
-                      ? '='
-                      : op.kind === 'substitute'
-                        ? 'S'
-                        : op.kind === 'insert'
-                          ? '+'
-                          : '-'}
-                  </span>
-                  <span
-                    className={cn(
-                      'w-full text-center',
-                      op.target_bit === null ? 'text-slate-600' : 'text-slate-300',
-                    )}
-                  >
-                    {op.target_bit ?? '·'}
-                  </span>
-                </button>
-              ))}
+                    <span
+                      className={cn(
+                        'w-full text-center',
+                        op.source_bit === null ? 'text-ink-muted' : 'text-ink-secondary',
+                      )}
+                    >
+                      {op.source_bit ?? '-'}
+                    </span>
+                    <span
+                      className={cn(
+                        'w-full rounded-[2px] text-center font-bold',
+                        op.kind === 'match' && 'bg-emerald-500/85 text-slate-950',
+                        op.kind === 'substitute' && 'bg-amber-400 text-slate-950',
+                        op.kind === 'insert' && 'bg-sky-400 text-slate-950',
+                        op.kind === 'delete' && 'bg-red-500 text-white',
+                      )}
+                    >
+                      {op.kind === 'match'
+                        ? '='
+                        : op.kind === 'substitute'
+                          ? 'S'
+                          : op.kind === 'insert'
+                            ? '+'
+                            : '-'}
+                    </span>
+                    <span
+                      className={cn(
+                        'w-full text-center',
+                        op.target_bit === null ? 'text-ink-muted' : 'text-ink-secondary',
+                      )}
+                    >
+                      {op.target_bit ?? '-'}
+                    </span>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
 
-        {hoverOp && (
-          <div className="flex flex-wrap items-center gap-4 rounded bg-[#1B2336] px-2.5 py-1.5 font-mono text-[11px] text-slate-300 tabular-nums">
-            <span>col #{hoverOp.idx}</span>
-            <span className="uppercase text-emerald-300">{hoverOp.op.kind}</span>
-            <span>
-              cand[{hoverOp.op.source_idx ?? '-'}] = {hoverOp.op.source_bit ?? 'gap'}
-            </span>
-            <span>
-              code[{hoverOp.op.target_idx ?? '-'}] = {hoverOp.op.target_bit ?? 'gap'}
-            </span>
-          </div>
-        )}
+        <div className="flex min-h-8 flex-wrap items-center gap-4 rounded-md border border-border bg-surface px-3 py-1.5 font-mono text-xs text-ink-secondary tabular-nums">
+          {activeOp ? (
+            <>
+              <span>col #{clampedIdx}</span>
+              <span className="font-semibold text-accent-ink">{activeOp.kind}</span>
+              <span>
+                cand[{activeOp.source_idx ?? '-'}] = {activeOp.source_bit ?? 'gap'}
+              </span>
+              <span>
+                code[{activeOp.target_idx ?? '-'}] = {activeOp.target_bit ?? 'gap'}
+              </span>
+            </>
+          ) : (
+            <span className="text-ink-muted">Hover or focus any alignment column to inspect bit coordinates.</span>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -203,34 +213,32 @@ function DecoderCard({
   return (
     <div
       className={cn(
-        'rounded-md border p-2.5',
-        ok
-          ? 'border-emerald-500/35 bg-emerald-500/5'
-          : 'border-red-500/40 bg-red-500/10',
+        'rounded-md border p-3',
+        ok ? 'border-emerald-500/40 bg-emerald-500/8' : 'border-red-500/45 bg-red-500/10',
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold text-slate-200">{name}</span>
+        <span className="text-xs font-semibold text-ink">{name}</span>
         {ok ? (
-          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-emerald-300">
-            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-accent-ink">
+            <CheckCircle2 className="size-3.5" aria-hidden="true" />
             <span>ID {res.watermark}</span>
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-red-300">
-            <XCircle className="h-3 w-3" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-danger-ink">
+            <XCircle className="size-3.5" aria-hidden="true" />
             <span>WRONG ({res.watermark})</span>
           </span>
         )}
       </div>
-      <div className="mt-1 flex items-center justify-between font-mono text-[11px] text-slate-300 tabular-nums">
+      <div className="mt-1.5 flex items-center justify-between font-mono text-xs text-ink-secondary tabular-nums">
         <span>
-          dist = <strong>{res.distance}</strong>
+          dist = <strong className="text-ink">{res.distance}</strong>
           {res.margin !== null ? ` (margin +${res.margin})` : ''}
         </span>
-        <span className="text-slate-500">{res.latency_ms.toFixed(2)} ms</span>
+        <span className="text-ink-muted">{res.latency_ms.toFixed(2)} ms</span>
       </div>
-      <p className="mt-1 text-[10px] text-slate-400">{subtitle}</p>
+      <p className="mt-1.5 text-xs text-ink-muted text-pretty">{subtitle}</p>
     </div>
   )
 }
