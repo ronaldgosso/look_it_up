@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llmw-codebook"
+version = "0.1.0"
+description = "Faithful open-source implementation and interactive studio for 'Look It Up: Multi-bit LLM Watermarking via Codebook Search' (arXiv:2611.16890)"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
+hf = [
+    "transformers>=4.40",
+    "torch>=2.2",
+]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+llmw-codebook = "llmw_codebook.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
