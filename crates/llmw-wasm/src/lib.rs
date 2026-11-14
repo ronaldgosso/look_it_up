@@ -95,6 +95,40 @@ pub unsafe extern "C" fn wasm_linear_d_min(
     cb.exact_linear_d_min()
 }
 
+/// Write `u + 1` histogram bins (`u32`) and 6 summary stats (`u32`):
+/// `[min_from_w, max_from_w, mean_x1000, nn_min, nn_max, zero_spread_flag]`.
+#[no_mangle]
+pub unsafe extern "C" fn wasm_distance_spectrum(
+    key_ptr: *const u8,
+    key_len: usize,
+    n: usize,
+    u: usize,
+    construction: u32,
+    watermark: u32,
+    spread_samples: usize,
+    hist_out_ptr: *mut u32,
+    stats_out_ptr: *mut u32,
+) {
+    let key = slice::from_raw_parts(key_ptr, key_len);
+    let kind = if construction == 1 {
+        ConstructionKind::Rng
+    } else {
+        ConstructionKind::Linear
+    };
+    let cb = PackedCodebook::build(key, n, u, kind);
+    let geom = cb.distance_geometry(watermark, spread_samples);
+    let hist_out = slice::from_raw_parts_mut(hist_out_ptr, u + 1);
+    hist_out.copy_from_slice(&geom.histogram);
+
+    let stats_out = slice::from_raw_parts_mut(stats_out_ptr, 6);
+    stats_out[0] = geom.min_from_w;
+    stats_out[1] = geom.max_from_w;
+    stats_out[2] = (geom.mean_from_w * 1000.0).round() as u32;
+    stats_out[3] = geom.nn_min;
+    stats_out[4] = geom.nn_max;
+    stats_out[5] = u32::from(geom.nn_zero_spread);
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn wasm_codebook_search(
     key_ptr: *const u8,

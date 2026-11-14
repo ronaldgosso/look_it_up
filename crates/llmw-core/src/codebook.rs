@@ -18,6 +18,17 @@ pub enum ConstructionKind {
     Rng,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct CodebookGeometry {
+    pub histogram: Vec<u32>,
+    pub min_from_w: u32,
+    pub max_from_w: u32,
+    pub mean_from_w: f64,
+    pub nn_min: u32,
+    pub nn_max: u32,
+    pub nn_zero_spread: bool,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CodebookMatch {
     pub watermark: u32,
@@ -296,6 +307,78 @@ impl PackedCodebook {
             .map(|w| self.words[w].xor(self.r_packed).popcount())
             .min()
             .unwrap_or(0)
+    }
+
+    /// Compute Hamming distance histogram from `watermark` and nearest-neighbor spread stats.
+    pub fn distance_geometry(&self, watermark: u32, spread_samples: usize) -> CodebookGeometry {
+        let count = self.words.len();
+        let target_idx = (watermark as usize) % count;
+        let target_word = self.words[target_idx];
+        let mut histogram = vec![0u32; self.u + 1];
+
+        let mut min_from_w = u32::MAX;
+        let mut max_from_w = 0u32;
+        let mut sum_from_w: u64 = 0;
+
+        for (j, word) in self.words.iter().enumerate() {
+            if j == target_idx {
+                continue;
+            }
+            let d = target_word.hamming(*word);
+            if (d as usize) <= self.u {
+                histogram[d as usize] += 1;
+            }
+            if d < min_from_w {
+                min_from_w = d;
+            }
+            if d > max_from_w {
+                max_from_w = d;
+            }
+            sum_from_w += d as u64;
+        }
+
+        let others = (count - 1).max(1) as f64;
+        let mean_from_w = (sum_from_w as f64) / others;
+
+        let mut nn_min = u32::MAX;
+        let mut nn_max = 0u32;
+        if self.construction == ConstructionKind::Linear {
+            let d_min = self.exact_linear_d_min();
+            nn_min = d_min;
+            nn_max = d_min;
+        } else {
+            let samples = count.min(spread_samples.max(1));
+            for s in 0..samples {
+                let i = (s * count) / samples;
+                let wi = self.words[i];
+                let mut local_nn = u32::MAX;
+                for (j, wj) in self.words.iter().enumerate() {
+                    if i == j {
+                        continue;
+                    }
+                    let d = wi.hamming(*wj);
+                    if d < local_nn {
+                        local_nn = d;
+                    }
+                }
+                if local_nn < nn_min {
+                    nn_min = local_nn;
+                }
+                if local_nn > nn_max {
+                    nn_max = local_nn;
+                }
+            }
+        }
+
+        CodebookGeometry {
+            histogram,
+            min_from_w: if min_from_w == u32::MAX { 0 } else { min_from_w },
+            max_from_w,
+            mean_from_w,
+            nn_min: if nn_min == u32::MAX { 0 } else { nn_min },
+            nn_max,
+            nn_zero_spread: nn_min == nn_max,
+        }
     }
 
     pub fn g_packed(&self) -> &[BitWord256] {

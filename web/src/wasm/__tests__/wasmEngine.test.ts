@@ -4,9 +4,12 @@ import { describe, expect, it } from 'vitest'
 import { sha256 } from '../../engine/sha256'
 import {
   applyAttackBrowser,
+  compareDecodersWasm,
+  computeBchShorteningCurve,
   computeCodebookInfoWasm,
   embedWatermarkWasm,
   extractWatermarkWasm,
+  simulateBchChannel,
 } from '../../engine/watermarkEngine'
 import type { StudioConfig } from '../../types/studio'
 import { getWasmClient, type LlmwWasmClient } from '../llmwWasm'
@@ -127,5 +130,62 @@ describe('llmw_wasm + browser engine', () => {
     const extracted = extractWatermarkWasm(wasm, config, embedded.generated_text)
     expect(extracted.watermark).toBe(watermark)
     expect(extracted.method).toBe('bch')
+  })
+
+  it('computes distance spectrum zero-spread invariance, dual-decoder frameshift & BCH curves', async () => {
+    const wasm = await loadTestWasm()
+
+    // 1. Linear vs RNG distance spectrum + zero nearest-neighbor spread
+    const linSpec = wasm.distanceSpectrum('spread-key', 8, 127, 'linear', 42, 256)
+    const rngSpec = wasm.distanceSpectrum('spread-key', 8, 127, 'rng', 42, 256)
+    expect(linSpec.bins.length).toBe(128)
+    expect(linSpec.bins.reduce((a, b) => a + b, 0)).toBe(255)
+    expect(linSpec.zeroSpread).toBe(true)
+    expect(linSpec.nnMin).toBe(linSpec.nnMax)
+    expect(linSpec.nnMin).toBe(wasm.linearDMin('spread-key', 8, 127))
+    expect(rngSpec.zeroSpread).toBe(false)
+    expect(rngSpec.nnMin).toBeLessThan(rngSpec.nnMax)
+
+    // 2. Logit step trace & Dual-decoder Hamming frameshift vs Levenshtein recovery
+    const config: StudioConfig = {
+      secretKey: 'look-it-up-demo-key',
+      n: 10,
+      u: 127,
+      delta: 4.5,
+      construction: 'linear',
+      method: 'levenshtein',
+      entropyMode: 'base',
+      enforceTi: true,
+      threshold: null,
+    }
+    const embedded = embedWatermarkWasm(
+      wasm,
+      config,
+      'Language model watermarking embeds an undetectable',
+      555,
+    )
+    expect(embedded.steps[0].top_v1_logit).toBeTypeOf('number')
+    expect(embedded.steps[0].top_v0_logit).toBeTypeOf('number')
+    expect(embedded.steps[0].v1_fraction).toBeCloseTo(0.5, 2)
+
+    const del = applyAttackBrowser(embedded.generated_text, 'word_deletion', 0.1, 3)
+    const cmp = compareDecodersWasm(wasm, config, del.attacked_text)
+    expect(cmp.levenshtein.watermark).toBe(555)
+    expect(cmp.hamming!.watermark).not.toBe(555)
+
+    // 3. BCH shortening frontier & syndrome error/frameshift simulation
+    const curve = computeBchShorteningCurve([127, 200], [24, 32])
+    const p127_24 = curve.find((p) => p.u === 127 && p.n === 24)!
+    const p200_32 = curve.find((p) => p.u === 200 && p.n === 32)!
+    expect(p127_24.t).toBe(21)
+    expect(p200_32.shorteningBits).toBe(55)
+    expect(p200_32.t).toBe(26)
+
+    const bchOk = simulateBchChannel(wasm, 12, 127, 1337, [2, 19, 88], null)
+    expect(bchOk.succeeded).toBe(true)
+    expect(bchOk.flips).toBe(3)
+
+    const bchShift = simulateBchChannel(wasm, 12, 127, 1337, [], 30)
+    expect(bchShift.succeeded).toBe(false)
   })
 })

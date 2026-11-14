@@ -1,4 +1,4 @@
-import type { ConstructionKind, ExtractionMethod } from '../types/studio'
+import type { ConstructionKind, DistanceSpectrumStats, ExtractionMethod } from '../types/studio'
 
 interface LlmwWasmExports {
   memory: WebAssembly.Memory
@@ -16,6 +16,17 @@ interface LlmwWasmExports {
     outPtr: number,
   ): void
   wasm_linear_d_min(keyPtr: number, keyLen: number, n: number, u: number): number
+  wasm_distance_spectrum(
+    keyPtr: number,
+    keyLen: number,
+    n: number,
+    u: number,
+    construction: number,
+    watermark: number,
+    spreadSamples: number,
+    histOutPtr: number,
+    statsOutPtr: number,
+  ): void
   wasm_codebook_search(
     keyPtr: number,
     keyLen: number,
@@ -120,6 +131,46 @@ export class LlmwWasmClient {
     const keyBytes = textEncoder.encode(secretKey)
     return this.withBytes(keyBytes, (keyPtr, keyLen) =>
       this.exports.wasm_linear_d_min(keyPtr, keyLen, n, u),
+    )
+  }
+
+  distanceSpectrum(
+    secretKey: string,
+    n: number,
+    u: number,
+    construction: ConstructionKind,
+    watermark: number,
+    spreadSamples = 96,
+  ): DistanceSpectrumStats {
+    const keyBytes = textEncoder.encode(secretKey)
+    const kind = construction === 'rng' ? 1 : 0
+    return this.withBytes(keyBytes, (keyPtr, keyLen) =>
+      this.withAlloc((u + 1) * 4, (histPtr) =>
+        this.withAlloc(6 * 4, (statsPtr) => {
+          this.exports.wasm_distance_spectrum(
+            keyPtr,
+            keyLen,
+            n,
+            u,
+            kind,
+            watermark >>> 0,
+            spreadSamples,
+            histPtr,
+            statsPtr,
+          )
+          const histView = new Uint32Array(this.exports.memory.buffer, histPtr, u + 1)
+          const statsView = new Uint32Array(this.exports.memory.buffer, statsPtr, 6)
+          return {
+            bins: Array.from(histView),
+            minFromW: statsView[0],
+            maxFromW: statsView[1],
+            meanFromW: statsView[2] / 1000,
+            nnMin: statsView[3],
+            nnMax: statsView[4],
+            zeroSpread: statsView[5] === 1,
+          }
+        }),
+      ),
     )
   }
 

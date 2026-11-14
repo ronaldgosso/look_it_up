@@ -14,6 +14,7 @@ import {
 } from './engine/apiClient'
 import {
   applyAttackBrowser,
+  compareDecodersWasm,
   computeCodebookInfoWasm,
   embedWatermarkWasm,
   extractWatermarkWasm,
@@ -23,6 +24,7 @@ import type {
   AttackType,
   BenchmarkResults,
   CodebookInfoResponse,
+  DualDecoderComparison,
   EmbedResponse,
   ExtractResponse,
   RuntimeMode,
@@ -63,8 +65,11 @@ export function App() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [embedResult, setEmbedResult] = useState<EmbedResponse | null>(null)
   const [attackMeta, setAttackMeta] = useState<AttackResponse | null>(null)
+  const [attackBudget, setAttackBudget] = useState<number>(0.1)
+  const [attackSeed, setAttackSeed] = useState<number>(0)
   const [suspectText, setSuspectText] = useState<string>('')
   const [extractResult, setExtractResult] = useState<ExtractResponse | null>(null)
+  const [decoderComparison, setDecoderComparison] = useState<DualDecoderComparison | null>(null)
   const [apiCodebookInfo, setApiCodebookInfo] = useState<CodebookInfoResponse | null>(null)
 
   useEffect(() => {
@@ -142,16 +147,19 @@ export function App() {
   const runExtraction = async (textToCheck: string, activeConfig: StudioConfig) => {
     if (!textToCheck.trim()) {
       setExtractResult(null)
+      setDecoderComparison(null)
       return
     }
     if (runtimeMode === 'api' && apiEngine) {
       const res = await extractViaApi(activeConfig, textToCheck)
       setExtractResult(res)
+      setDecoderComparison(null)
       return
     }
     if (!wasm) return
     const res = extractWatermarkWasm(wasm, activeConfig, textToCheck)
     setExtractResult(res)
+    setDecoderComparison(compareDecodersWasm(wasm, activeConfig, textToCheck))
   }
 
   const handleEmbed = async () => {
@@ -183,8 +191,8 @@ export function App() {
       const baseText = embedResult.generated_text
       const attacked =
         runtimeMode === 'api' && apiEngine
-          ? await attackViaApi(baseText, attackType, 0.1, 0)
-          : applyAttackBrowser(baseText, attackType, 0.1, 0)
+          ? await attackViaApi(baseText, attackType, attackBudget, attackSeed)
+          : applyAttackBrowser(baseText, attackType, attackBudget, attackSeed)
 
       setAttackMeta(attacked)
       setSuspectText(attacked.attacked_text)
@@ -215,8 +223,10 @@ export function App() {
       setErrorMessage(null)
       if (nextText.trim()) {
         setExtractResult(extractWatermarkWasm(wasm, config, nextText))
+        setDecoderComparison(compareDecodersWasm(wasm, config, nextText))
       } else {
         setExtractResult(null)
+        setDecoderComparison(null)
       }
     }
   }
@@ -290,8 +300,13 @@ export function App() {
               onChangePrompt={setPrompt}
               embedResult={embedResult}
               attackMeta={attackMeta}
+              attackBudget={attackBudget}
+              onChangeAttackBudget={setAttackBudget}
+              attackSeed={attackSeed}
+              onChangeAttackSeed={setAttackSeed}
               suspectText={suspectText}
               extractResult={extractResult}
+              decoderComparison={decoderComparison}
               onEmbed={handleEmbed}
               onAttack={handleAttack}
               onResetText={handleResetText}

@@ -1,8 +1,10 @@
 import { Binary, GitCompare, Shield } from 'lucide-react'
 import { useMemo } from 'react'
 import type { CodebookInfoResponse, StudioConfig } from '../types/studio'
-import type { LlmwWasmClient } from '../wasm/llmwWasm'
 import { cn } from '../utils/cn'
+import type { LlmwWasmClient } from '../wasm/llmwWasm'
+import { BchAnalyzerPanel } from './BchAnalyzerPanel'
+import { DistanceSpectrumChart } from './DistanceSpectrumChart'
 
 interface InspectorViewProps {
   config: StudioConfig
@@ -39,6 +41,28 @@ export function InspectorView({ config, watermark, info, wasm }: InspectorViewPr
     const levenshtein = wasm.levenshtein(codeA, codeB)
     return { baseId, neighborId, codeA, codeB, hamming, levenshtein }
   }, [wasm, config.secretKey, config.n, config.u, config.construction, watermark])
+
+  const spectra = useMemo(() => {
+    if (!wasm) return null
+    const spreadSamples = config.n <= 10 ? 256 : 96
+    const linear = wasm.distanceSpectrum(
+      config.secretKey,
+      config.n,
+      config.u,
+      'linear',
+      watermark,
+      spreadSamples,
+    )
+    const rng = wasm.distanceSpectrum(
+      config.secretKey,
+      config.n,
+      config.u,
+      'rng',
+      watermark,
+      spreadSamples,
+    )
+    return { linear, rng }
+  }, [wasm, config.secretKey, config.n, config.u, watermark])
 
   return (
     <div className="space-y-5">
@@ -96,6 +120,26 @@ export function InspectorView({ config, watermark, info, wasm }: InspectorViewPr
           </div>
         )}
       </section>
+
+      {spectra && info && (
+        <DistanceSpectrumChart
+          u={config.u}
+          n={config.n}
+          gvDistance={info.gilbert_varshamov_d}
+          linearSpectrum={spectra.linear}
+          rngSpectrum={spectra.rng}
+        />
+      )}
+
+      {info && (
+        <BchAnalyzerPanel
+          n={config.n}
+          u={config.u}
+          watermark={watermark}
+          currentT={info.bch.correction_capability}
+          wasm={wasm}
+        />
+      )}
 
       {comparison && (
         <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">

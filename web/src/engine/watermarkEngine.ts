@@ -2,7 +2,9 @@ import type {
   AlignmentOp,
   AttackResponse,
   AttackType,
+  BchCurvePoint,
   CodebookInfoResponse,
+  DualDecoderComparison,
   EmbedResponse,
   EntropyMode,
   ExtractResponse,
@@ -177,11 +179,21 @@ export function embedWatermarkWasm(
 
     let v1Max = -Infinity
     let v0Max = -Infinity
+    let v1BestId = 0
+    let v0BestId = 0
+    let v1Count = 0
     for (let i = 0; i < vocabSize; i++) {
       if (isV1[i]) {
-        if (rawLogits[i] > v1Max) v1Max = rawLogits[i]
+        v1Count += 1
+        if (rawLogits[i] > v1Max) {
+          v1Max = rawLogits[i]
+          v1BestId = i
+        }
       } else {
-        if (rawLogits[i] > v0Max) v0Max = rawLogits[i]
+        if (rawLogits[i] > v0Max) {
+          v0Max = rawLogits[i]
+          v0BestId = i
+        }
       }
     }
     const preMargin = targetBit === 1 ? v1Max - v0Max : v0Max - v1Max
@@ -224,6 +236,12 @@ export function embedWatermarkWasm(
       bias_flipped_choice: chosenId !== rawBest,
       pre_bias_margin: Number(preMargin.toFixed(3)),
       ti_retries: retries,
+      top_v1_token: browserTokenizer.decode([v1BestId]),
+      top_v0_token: browserTokenizer.decode([v0BestId]),
+      top_v1_logit: Number(v1Max.toFixed(3)),
+      top_v0_logit: Number(v0Max.toFixed(3)),
+      bias_delta: config.delta,
+      v1_fraction: Number((v1Count / vocabSize).toFixed(4)),
     })
     generatedIds.push(chosenId)
     context.push(chosenId)
@@ -618,5 +636,87 @@ export function computeCodebookInfoWasm(
     gilbert_varshamov_d: gv,
     exact_linear_d_min: dMin,
     bch: computeBchParams(config.n, config.u),
+  }
+}
+
+export function compareDecodersWasm(
+  wasm: LlmwWasmClient,
+  config: StudioConfig,
+  text: string,
+): DualDecoderComparison {
+  const levenshtein = extractWatermarkWasm(wasm, { ...config, method: 'levenshtein' }, text)
+  const hamming = extractWatermarkWasm(wasm, { ...config, method: 'hamming' }, text)
+  const bch =
+    config.construction === 'linear'
+      ? extractWatermarkWasm(wasm, { ...config, method: 'bch' }, text)
+      : null
+  return { hamming, levenshtein, bch }
+}
+
+export function computeBchShorteningCurve(
+  uValues: number[],
+  nValues: number[],
+): BchCurvePoint[] {
+  const pts: BchCurvePoint[] = []
+  for (const u of uValues) {
+    for (const n of nValues) {
+      if (n >= u) continue
+      const p = computeBchParams(n, u)
+      pts.push({
+        n,
+        u,
+        nativeLength: p.native_length,
+        fieldDegree: p.field_degree,
+        messageCapacity: p.message_capacity,
+        shorteningBits: p.shortening_bits,
+        t: p.correction_capability,
+        correctionRate: p.correction_rate,
+      })
+    }
+  }
+  return pts
+}
+
+export function simulateBchChannel(
+  wasm: LlmwWasmClient,
+  n: number,
+  u: number,
+  watermark: number,
+  flipPositions: number[],
+  dropPosition: number | null,
+): {
+  originalCodeword: Uint8Array
+  receivedBits: Uint8Array
+  decodedWatermark: number
+  flips: number
+  succeeded: boolean
+} {
+  const wm = watermark >>> 0
+  const originalCodeword = wasm.bchEncode(n, u, wm)
+  const flipped = new Uint8Array(originalCodeword)
+  for (const idx of flipPositions) {
+    if (idx >= 0 && idx < u) {
+      flipped[idx] ^= 1
+    }
+  }
+  let receivedBits: Uint8Array
+  if (dropPosition !== null && dropPosition >= 0 && dropPosition < u) {
+    receivedBits = new Uint8Array(u)
+    let outIdx = 0
+    for (let i = 0; i < u; i++) {
+      if (i === dropPosition) continue
+      receivedBits[outIdx++] = flipped[i]
+    }
+    receivedBits[u - 1] = 0
+  } else {
+    receivedBits = flipped
+  }
+  const decoded = wasm.bchDecode(n, u, receivedBits)
+  return {
+    originalCodeword,
+    receivedBits,
+    decodedWatermark: decoded.watermark,
+    flips: decoded.flips,
+    succeeded: decoded.watermark === wm,
   }
 }

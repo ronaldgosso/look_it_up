@@ -3,7 +3,7 @@
 > Faithful **Rust + WebAssembly + Python** implementation, adversarial benchmark suite, and interactive zero-cost studio for **"Look It Up: Multi-bit LLM Watermarking via Codebook Search"** ([arXiv:2611.16890](https://arxiv.org/abs/2611.16890)) by Jarosław Janas, Paweł Morawiecki, and Josef Pieprzyk.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Phase 3: Interactive WASM Studio](https://img.shields.io/badge/Phase%203-Interactive%20WASM%20Studio-22c55e.svg)](docs/ROADMAP.md)
+[![Phase 4: Interactive Visualizers](https://img.shields.io/badge/Phase%204-Visualizers%20%26%20Geometry%20Explorer-22c55e.svg)](docs/ROADMAP.md)
 
 ## Overview
 
@@ -17,8 +17,8 @@ Existing multi-bit LLM watermarks force an uncomfortable trade-off on short text
   - Bit-packed `PackedCodebook` (4x lower memory than byte arrays) with `std::thread::scope` multi-threaded nearest-neighbor search (`codebook.rs`).
   - Narrow-sense primitive binary BCH over $\mathrm{GF}(2^m)$ with Berlekamp–Massey, Chien search, and Table V code shortening (`bch.rs`).
 - **`crates/llmw-native`**: C-ABI shared library (`llmw_native.dll` / `.so` / `.dylib`) automatically loaded by Python via `ctypes` (`src/llmw_codebook/_rust_accel.py`) + standalone `llmw-bench` CLI binary.
-- **`crates/llmw-wasm`**: Zero-dependency `wasm32-unknown-unknown` target (`llmw_wasm.wasm`, ~60.7 KB) for zero-cost client-side execution in the Interactive Studio.
-- **`web/`**: Vite + React + TypeScript Interactive Web Studio with a client-side `WebAssembly` engine (`llmwWasm.ts` + exported N-gram model assets), Playground, Benchmark Analyzer, and Codebook Inspector.
+- **`crates/llmw-wasm`**: Zero-dependency `wasm32-unknown-unknown` target (`llmw_wasm.wasm`, ~62.5 KB) with distance-spectrum, codebook search, BCH, and vocab-split exports for zero-cost client-side execution.
+- **`web/`**: Vite + React + TypeScript Interactive Web Studio with a client-side `WebAssembly` engine (`llmwWasm.ts`), token-level $V_0/V_1$ logit-bias inspector, dual-decoder Hamming frameshift vs. Levenshtein edit-alignment visualizer, Linear vs. RNG zero-spread spectrum explorer, and interactive BCH shortening sandbox.
 - **`src/llmw_codebook`**: Python orchestration layer providing Algorithm 2 & 3 embedder/extractor, Appendix F stepwise TI verification, Appendix B adversarial attacks, Appendix G quality & ROC/AUROC metrics, built-in zero-cost `BuiltinNGramModel`, optional `HuggingFaceBackend`, optional FastAPI local bridge (`api.py`), and reproducible benchmarks.
 
 ## Measured Phase 2 Highlights
