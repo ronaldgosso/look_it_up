@@ -55,12 +55,22 @@ def batch_hamming_distances(candidate: np.ndarray, codewords: np.ndarray) -> np.
     return np.count_nonzero(cw != cand, axis=1).astype(np.int32)
 
 
-def levenshtein_distance(a: Sequence[int] | np.ndarray, b: Sequence[int] | np.ndarray) -> int:
+def levenshtein_distance(
+    a: Sequence[int] | np.ndarray,
+    b: Sequence[int] | np.ndarray,
+    use_native: bool = True,
+) -> int:
     """Exact binary Levenshtein distance via Myers' bit-parallel algorithm.
 
     Operates in O(|b|) arbitrary-precision bit operations on binary sequences,
     producing exact edit distance matching Wagner-Fischer DP.
     """
+    if use_native:
+        from llmw_codebook._rust_accel import is_native_available, native_levenshtein
+
+        if is_native_available():
+            return native_levenshtein(np.asarray(a, dtype=np.uint8), np.asarray(b, dtype=np.uint8))
+
     m = len(a)
     n = len(b)
     if m == 0:

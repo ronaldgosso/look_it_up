@@ -73,7 +73,7 @@ class SplitMix64:
                 return val % upper
 
 
-def split_vocabulary(vocab_size: int, seed: int) -> np.ndarray:
+def split_vocabulary(vocab_size: int, seed: int, use_native: bool = True) -> np.ndarray:
     """Deterministically partition ``[0, vocab_size)`` into balanced sets V0 and V1.
 
     Returns a boolean mask ``is_v1`` of shape ``(vocab_size,)`` where ``False``
@@ -82,6 +82,11 @@ def split_vocabulary(vocab_size: int, seed: int) -> np.ndarray:
     """
     if vocab_size < 2:
         raise ValueError(f"vocab_size must be at least 2, got {vocab_size}")
+    if use_native:
+        from llmw_codebook._rust_accel import is_native_available, native_split_vocab
+
+        if is_native_available():
+            return native_split_vocab(vocab_size, seed)
     rng = SplitMix64(seed)
     perm = list(range(vocab_size))
     for i in range(vocab_size - 1, 0, -1):

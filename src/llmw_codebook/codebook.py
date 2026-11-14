@@ -116,7 +116,16 @@ def derive_linear_params(secret_key: str, n: int, u: int) -> tuple[np.ndarray, n
 class BaseCodebook(ABC):
     """Shared interface for precomputed or on-demand multi-bit watermarks."""
 
-    def __init__(self, secret_key: str, n: int, u: int, max_materialize_n: int = 20) -> None:
+    construction_name: ConstructionKind = "linear"
+
+    def __init__(
+        self,
+        secret_key: str,
+        n: int,
+        u: int,
+        max_materialize_n: int = 20,
+        use_native: bool = True,
+    ) -> None:
         if n < 1 or u <= n:
             raise ValueError(f"Require 1 <= n < u, got n={n}, u={u}")
         self.secret_key = secret_key
@@ -124,7 +133,21 @@ class BaseCodebook(ABC):
         self.u = u
         self.num_entries = 1 << n
         self._max_materialize_n = max_materialize_n
+        self._use_native = use_native
         self._table: np.ndarray | None = None
+        self._native_handle = None
+
+    def _get_native_handle(self):
+        if not self._use_native or self.n > 24 or self.u > 256:
+            return None
+        if self._native_handle is None:
+            from llmw_codebook._rust_accel import NativeCodebookHandle, is_native_available
+
+            if is_native_available():
+                self._native_handle = NativeCodebookHandle(
+                    self.secret_key, self.n, self.u, self.construction_name
+                )
+        return self._native_handle
 
     @property
     def table(self) -> np.ndarray:
@@ -153,12 +176,22 @@ class BaseCodebook(ABC):
     ) -> CodebookMatch:
         """Find the nearest codeword in C to ``candidate`` under Hamming or Levenshtein distance."""
         cand = np.asarray(candidate, dtype=np.uint8)
+        if metric == "hamming" and cand.shape[0] != self.u:
+            raise ValueError(
+                f"Hamming search requires candidate of length u={self.u}, got {cand.shape[0]}"
+            )
+        handle = self._get_native_handle()
+        if handle is not None and metric in ("hamming", "levenshtein"):
+            wm, dist, second, cw = handle.search(cand, metric=metric)
+            return CodebookMatch(
+                watermark=wm,
+                distance=dist,
+                second_best_distance=second,
+                codeword=cw,
+            )
+
         table = self.table
         if metric == "hamming":
-            if cand.shape[0] != self.u:
-                raise ValueError(
-                    f"Hamming search requires candidate of length u={self.u}, got {cand.shape[0]}"
-                )
             dists = batch_hamming_distances(cand, table)
             return self._extract_top_match(dists, table)
 
@@ -244,8 +277,23 @@ class BaseCodebook(ABC):
 class LinearCodebook(BaseCodebook):
     """Affine linear codebook over GF(2): L_W = bits(W) * G mod 2 XOR r."""
 
-    def __init__(self, secret_key: str, n: int, u: int, max_materialize_n: int = 20) -> None:
-        super().__init__(secret_key=secret_key, n=n, u=u, max_materialize_n=max_materialize_n)
+    construction_name: ConstructionKind = "linear"
+
+    def __init__(
+        self,
+        secret_key: str,
+        n: int,
+        u: int,
+        max_materialize_n: int = 20,
+        use_native: bool = True,
+    ) -> None:
+        super().__init__(
+            secret_key=secret_key,
+            n=n,
+            u=u,
+            max_materialize_n=max_materialize_n,
+            use_native=use_native,
+        )
         self.generator_matrix, self.offset = derive_linear_params(secret_key, n, u)
 
     def encode(self, watermark: int) -> np.ndarray:
@@ -271,6 +319,8 @@ class LinearCodebook(BaseCodebook):
 class RNGCodebook(BaseCodebook):
     """Independent random codebook baseline: seed_i = SHA256(K || i)."""
 
+    construction_name: ConstructionKind = "rng"
+
     def encode(self, watermark: int) -> np.ndarray:
         if watermark < 0 or watermark >= self.num_entries:
             raise ValueError(
@@ -292,12 +342,25 @@ def create_codebook(
     u: int,
     construction: ConstructionKind = "linear",
     max_materialize_n: int = 20,
+    use_native: bool = True,
 ) -> BaseCodebook:
     """Factory for Linear or RNG codebooks."""
     if construction == "linear":
-        return LinearCodebook(secret_key=secret_key, n=n, u=u, max_materialize_n=max_materialize_n)
+        return LinearCodebook(
+            secret_key=secret_key,
+            n=n,
+            u=u,
+            max_materialize_n=max_materialize_n,
+            use_native=use_native,
+        )
     if construction == "rng":
-        return RNGCodebook(secret_key=secret_key, n=n, u=u, max_materialize_n=max_materialize_n)
+        return RNGCodebook(
+            secret_key=secret_key,
+            n=n,
+            u=u,
+            max_materialize_n=max_materialize_n,
+            use_native=use_native,
+        )
     raise ValueError(f"Unknown codebook construction: {construction!r}")
 
 
