@@ -1,0 +1,12 @@
+[package]
+name = "llmw-wasm"
+version = "0.2.0"
+edition = "2021"
+license = "GPL-3.0-only"
+description = "Zero-dependency WebAssembly target for browser-side codebook watermarking"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+llmw-core = { path = "../llmw-core" }

@@ -1,0 +1,8 @@
+[package]
+name = "llmw-core"
+version = "0.2.0"
+edition = "2021"
+license = "GPL-3.0-only"
+description = "Core cryptographic codebooks, BCH, bit-parallel Levenshtein, and PRNG primitives for multi-bit LLM watermarking"
+
+[dependencies]

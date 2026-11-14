@@ -101,6 +101,15 @@ def _build_vocabulary() -> list[str]:
             break
         _add(tok)
 
+    # Populate remaining slots with real English lexicon words (avoiding character-level
+    # fragmentation under synonym-swap and insertion attacks).
+    from llmw_codebook.attacks import extra_tokenizer_words
+
+    for w in extra_tokenizer_words():
+        if len(vocab) >= 1024:
+            break
+        _add(w)
+
     # Pad deterministically to exact power of 2 (1024) if needed.
     filler_idx = 0
     while len(vocab) < 1024:
@@ -177,8 +186,11 @@ class BuiltinNGramModel(LanguageModelBackend):
         self.tokenizer = SubwordTokenizer(vocab)
         self._vocab_size = self.tokenizer.vocab_size
 
-        # Restrict generated words to multi-character lexical/punctuation tokens
-        # (suppressing rare single-letter noise and synthetic padding tokens).
+        corpus_ids = self.tokenizer.encode(_CORPUS)
+        corpus_tok_set = set(corpus_ids)
+
+        # Restrict generated words to multi-character corpus lexical/punctuation tokens
+        # (suppressing rare single-letter noise and out-of-corpus attack lexicon tokens).
         self._base_prior = np.full(self._vocab_size, -25.0, dtype=np.float64)
         self._punct_ids: list[int] = []
         self._space_word_ids: list[int] = []
@@ -186,11 +198,10 @@ class BuiltinNGramModel(LanguageModelBackend):
             if tok in {".", ",", ";", ":", "-", "!", "?"}:
                 self._punct_ids.append(idx)
                 self._base_prior[idx] = -4.5
-            elif tok.startswith(" ") and len(tok.strip()) >= 1 and not tok.startswith(" tok"):
+            elif idx in corpus_tok_set and tok.startswith(" ") and len(tok.strip()) >= 1:
                 self._base_prior[idx] = -1.5
                 self._space_word_ids.append(idx)
 
-        corpus_ids = self.tokenizer.encode(_CORPUS)
         unigram = np.ones(self._vocab_size, dtype=np.float64) * 0.05
         bigram: dict[int, Counter[int]] = defaultdict(Counter)
         trigram: dict[tuple[int, int], Counter[int]] = defaultdict(Counter)

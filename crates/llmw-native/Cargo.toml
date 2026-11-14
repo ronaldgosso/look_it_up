@@ -1,0 +1,17 @@
+[package]
+name = "llmw-native"
+version = "0.2.0"
+edition = "2021"
+license = "GPL-3.0-only"
+description = "Multi-threaded native FFI shared library and benchmark binary for llmw-core"
+
+[lib]
+name = "llmw_native"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "llmw-bench"
+path = "src/bin/llmw_bench.rs"
+
+[dependencies]
+llmw-core = { path = "../llmw-core" }

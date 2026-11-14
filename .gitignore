@@ -24,6 +24,7 @@ web/.vite/
 
 # Local artifacts & downloaded paper PDF (see papers/README.md)
 papers/*.pdf
+target/
 *.log
 .DS_Store
 Thumbs.db
