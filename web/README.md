@@ -6,6 +6,8 @@ Language generation and adversarial attacks in standalone mode use synchronized 
 
 If you want real HuggingFace tokenizers and logits instead of the built-in N-gram model, start the optional Python backend (`uvicorn llmw_codebook.api:app --port 8000`) locally. [apiClient.ts](src/engine/apiClient.ts) checks port 8000 at startup and routes embed, extract, and attack calls there when available.
 
+The application header in [HeaderBar.tsx](src/components/HeaderBar.tsx) renders an inline SVG version of the Codex Aperture project emblem, paired with multi-resolution `.ico`, SVG, Apple touch, and PWA manifest icons (`favicon.ico`, `favicon.svg`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`, `maskable-512.png`, and [site.webmanifest](public/site.webmanifest)) in `public/`.
+
 ## Development Commands
 
 Run these commands from inside `web/`:

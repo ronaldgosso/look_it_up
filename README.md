@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/look-it-up-horizontal-dark.svg" />
+  <img alt="Look It Up Codex Aperture mark and geometric wordmark" src="docs/assets/brand/look-it-up-horizontal-color.svg" height="68" />
+</picture>
+
 # Look It Up: Multi-bit LLM Watermarking via Codebook Search
 
 [![CI](https://github.com/ronaldgosso/look_it_up/actions/workflows/ci.yml/badge.svg)](https://github.com/ronaldgosso/look_it_up/actions/workflows/ci.yml)
@@ -88,5 +93,6 @@ uvicorn llmw_codebook.api:app --port 8000 --reload
 | [Roadmap](docs/ROADMAP.md) | Five-phase build record and PR history |
 | [Portfolio kit](docs/PORTFOLIO_SHOWCASE.md) | Deployment notes, resume copy, LinkedIn posts, demo script, and interview notes |
 | [Dev.to article](docs/devto_article.md) | Interactive article draft with cover art and screenshots in `docs/assets/devto/` |
+| [Brand identity](docs/assets/brand/brand-guidelines.md) | Codex Aperture SVG marks, geometric wordmarks, color tokens, and [mockup sheet](docs/assets/brand/look-it-up-brand-showcase.png) |
 | [Reference paper](papers/README.md) | Citation details and download command for `arXiv:2611.16890` |
 | [License](LICENSE) | GNU General Public License v3 |

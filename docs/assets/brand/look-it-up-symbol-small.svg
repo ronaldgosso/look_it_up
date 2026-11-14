@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title-sym-s">
+  <title>look it up symbol small</title>
+  
+  <!-- Widened 26px Y-channel and slightly larger center bit for crisp 16px-32px rendering -->
+  <path fill="#0F172A" d="M 24 62 H 50 L 115 127 V 216 H 102 L 24 138 Z"/>
+  <path fill="#0F172A" d="M 232 62 H 206 L 141 127 V 216 H 154 L 232 138 Z"/>
+  <polygon fill="#22C55E" points="128,20 172,64 128,108 84,64"/>
+</svg>

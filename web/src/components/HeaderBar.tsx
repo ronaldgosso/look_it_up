@@ -61,8 +61,17 @@ export function HeaderBar({
           </button>
 
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md border border-emerald-500/40 bg-emerald-500/10 text-emerald-400">
-              <Binary className="h-4 w-4" aria-hidden="true" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-emerald-500/40 bg-[#0F172A] p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 256 256"
+                className="h-full w-full"
+                aria-hidden="true"
+              >
+                <path fill="#F8FAFC" d="M 24 62 H 50 L 115 127 V 216 H 102 L 24 138 Z" />
+                <path fill="#F8FAFC" d="M 232 62 H 206 L 141 127 V 216 H 154 L 232 138 Z" />
+                <polygon fill="#22C55E" points="128,20 172,64 128,108 84,64" />
+              </svg>
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">

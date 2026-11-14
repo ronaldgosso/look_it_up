@@ -4,7 +4,7 @@ Deployment steps, resume copy, LinkedIn drafts, a 45-second walkthrough script, 
 
 ## GitHub Pages Activation
 
-Static deployment runs automatically from [the Pages workflow](../.github/workflows/pages.yml) whenever `main` changes. Merge PR #6 (and PR #7 if syncing documentation) into `main`, then open repository Settings on GitHub and click Pages. Under Build and deployment Source, pick GitHub Actions, run Deploy Web Studio to GitHub Pages once from the Actions tab, and wait for the site to publish at `https://ronaldgosso.github.io/look_it_up/`.
+Static deployment runs automatically from [the Pages workflow](../.github/workflows/pages.yml) whenever `main` changes. Merge PR #6, PR #7, and PR #8 into `main`, then open repository Settings on GitHub and click Pages. Under Build and deployment Source, pick GitHub Actions, run Deploy Web Studio to GitHub Pages once from the Actions tab, and wait for the site to publish at `https://ronaldgosso.github.io/look_it_up/`.
 
 ## Resume Project Copy
 
@@ -12,7 +12,7 @@ Built a zero-dependency Rust cryptography and error-correction core (`llmw-core`
 
 Cut Levenshtein codebook extraction latency by `55.94x` against Python/NumPy across 32,768 codewords (`756.14 ms` down to `13.52 ms` on 8 threads), and scaled multi-threaded native lookup to 1,048,576 codewords (`n=20`, `u=127`) in `3.73 ms` (Hamming), `609.09 ms` (Levenshtein), and `0.096 ms` (BCH) via `llmw-bench`.
 
-Shipped an offline React, TypeScript, and WebAssembly browser studio at zero hosting cost with a step-by-step `V0`/`V1` logit-bias inspector, live Appendix B attack suite (word deletion, insertion, synonym swap, paraphrase), two-track edit-alignment diffs, codebook distance spectrum histograms, and BCH capacity curves.
+Shipped an offline React, TypeScript, and WebAssembly browser studio at zero hosting cost with a step-by-step `V0`/`V1` logit-bias inspector, live Appendix B attack suite (word deletion, insertion, synonym swap, paraphrase), two-track edit-alignment diffs, codebook distance spectrum histograms, BCH capacity curves, and a custom Codex Aperture SVG brand identity with PWA icon assets.
 
 ## LinkedIn Posts
 
@@ -49,7 +49,7 @@ Start at 0:00 to 0:10 in Playground with `n=12`, `u=127`, Linear GF(2), and Leve
 
 From 0:10 to 0:25, trigger Word Deletion (10%). Keep both decoder verdicts visible side by side so viewers see Hamming fail on `WRONG (...)` due to frameshift while Levenshtein reports `FRAMESHIFT RECOVERED`, then pan across the cyan `+` gap markers in the Two-Track Edit Alignment ribbon.
 
-From 0:25 to 0:35, switch to Benchmarks and highlight the `55.94x` Rust speedup bar beside the Appendix B attack matrix.
+From 0:25 to 0:35, switch to Benchmarks and point to the `55.94x` Rust speedup bar beside the Appendix B attack matrix.
 
 From 0:35 to 0:45, open Codebook Inspector. Show ZERO SPREAD on the Linear GF(2) distance histogram against the scattered RNG spread, then click Max Guarantee: Inject t Flips and Inject 1 Deletion Frameshift in the BCH sandbox to contrast instant Berlekamp-Massey correction against syndrome collapse on unaligned deletions.
 
@@ -77,15 +77,15 @@ Quarantining all hashing, PRNG, codebook math, Myers bit-parallel DP, and BCH fi
 
 ## Dev.to Article and Screenshots
 
-The draft post lives at [devto_article.md](devto_article.md) alongside its `1000x420` banner and five screenshots captured from the compiled WASM Studio in [assets/devto/](assets/devto/).
+The draft post lives at [devto_article.md](devto_article.md) alongside its `1000x420` banner and five screenshots captured from the compiled WASM Studio in [assets/devto/](assets/devto/). Source vector marks, geometric `LOOK IT UP` lockups, [brand-guidelines.md](assets/brand/brand-guidelines.md), and the application mockup sheet ([look-it-up-brand-showcase.png](assets/brand/look-it-up-brand-showcase.png)) sit alongside them in [assets/brand/](assets/brand/).
 
 | File | Subject |
 | --- | --- |
-| `cover.png` | `1000x420` Dev.to banner image |
+| `cover.png` | `1000x420` Dev.to banner image stamped with the Codex Aperture dark lockup |
 | `01-playground-logit-inspector.png` | Playground token stream and Logit-Bias Step Inspector |
 | `02-playground-frameshift-recovery.png` | 10% word deletion failure in Hamming and BCH vs. Levenshtein alignment recovery |
 | `03-benchmarks-speedup.png` | `55.9x` Rust speedup bars and Appendix B recovery table |
 | `04-codebook-zero-spread.png` | Linear GF(2) zero spread (`[43..43]`) vs. RNG histogram |
 | `05-bch-analyzer-sandbox.png` | Shortened BCH error curves and `t=27` Berlekamp-Massey sandbox |
 
-Before publishing on Dev.to, merge PR #6 (and PR #7 if updating docs) into `main` so the `raw.githubusercontent.com/.../main/...` image links resolve. Paste the contents of [devto_article.md](devto_article.md) into `dev.to/new`, inspect the draft preview, change `published: false` to `published: true` in the front matter, and hit Publish.
+Before publishing on Dev.to, merge PR #6, PR #7, and PR #8 into `main` so the `raw.githubusercontent.com/.../main/...` image links resolve. Paste the contents of [devto_article.md](devto_article.md) into `dev.to/new`, inspect the draft preview, change `published: false` to `published: true` in the front matter, and hit Publish.
