@@ -114,4 +114,16 @@ fn gv_bound_and_vocab_split_sanity() {
     let ones: usize = split.iter().map(|&b| b as usize).sum();
     assert_eq!(ones, 512);
     assert_eq!(hamming_distance(&[0, 1, 1], &[1, 1, 0]), 2);
+
+    // Distance geometry confirms zero nearest-neighbor spread for Linear vs positive spread for RNG.
+    let lin = PackedCodebook::build(b"spread-check", 8, 127, ConstructionKind::Linear);
+    let lin_geom = lin.distance_geometry(42, 256);
+    assert!(lin_geom.nn_zero_spread);
+    assert_eq!(lin_geom.nn_min, lin_geom.nn_max);
+    assert_eq!(lin_geom.histogram.iter().sum::<u32>(), 255);
+
+    let rng_cb = PackedCodebook::build(b"spread-check", 8, 127, ConstructionKind::Rng);
+    let rng_geom = rng_cb.distance_geometry(42, 256);
+    assert!(!rng_geom.nn_zero_spread);
+    assert!(rng_geom.nn_min < rng_geom.nn_max);
 }

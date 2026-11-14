@@ -13,12 +13,14 @@ import { useState } from 'react'
 import type {
   AttackResponse,
   AttackType,
+  DualDecoderComparison,
   EmbedResponse,
   ExtractResponse,
   StudioConfig,
-  TokenStepTrace,
 } from '../types/studio'
 import { cn } from '../utils/cn'
+import { AlignmentFrameshiftPanel } from './AlignmentFrameshiftPanel'
+import { TokenLogitInspector } from './TokenLogitInspector'
 
 interface PlaygroundViewProps {
   config: StudioConfig
@@ -31,8 +33,13 @@ interface PlaygroundViewProps {
   onChangePrompt: (nextPrompt: string) => void
   embedResult: EmbedResponse | null
   attackMeta: AttackResponse | null
+  attackBudget: number
+  onChangeAttackBudget: (budget: number) => void
+  attackSeed: number
+  onChangeAttackSeed: (seed: number) => void
   suspectText: string
   extractResult: ExtractResponse | null
+  decoderComparison: DualDecoderComparison | null
   onEmbed: () => void
   onAttack: (attackType: AttackType) => void
   onResetText: () => void
@@ -48,10 +55,10 @@ const PROMPT_PRESETS = [
 ]
 
 const ATTACK_BUTTONS: Array<{ id: AttackType; label: string }> = [
-  { id: 'word_deletion', label: 'Word Deletion (10%)' },
-  { id: 'word_insertion', label: 'Word Insertion (10%)' },
-  { id: 'synonym_swap', label: 'Synonym Swap (10%)' },
-  { id: 'paraphrase', label: 'Paraphrase (10%)' },
+  { id: 'word_deletion', label: 'Word Deletion' },
+  { id: 'word_insertion', label: 'Word Insertion' },
+  { id: 'synonym_swap', label: 'Synonym Swap' },
+  { id: 'paraphrase', label: 'Paraphrase' },
 ]
 
 export function PlaygroundView({
@@ -65,15 +72,20 @@ export function PlaygroundView({
   onChangePrompt,
   embedResult,
   attackMeta,
+  attackBudget,
+  onChangeAttackBudget,
+  attackSeed,
+  onChangeAttackSeed,
   suspectText,
   extractResult,
+  decoderComparison,
   onEmbed,
   onAttack,
   onResetText,
   onChangeSuspectText,
   onExtractNow,
 }: PlaygroundViewProps) {
-  const [selectedStep, setSelectedStep] = useState<TokenStepTrace | null>(null)
+  const [selectedStepIdx, setSelectedStepIdx] = useState<number>(0)
 
   const metricLabel =
     config.method === 'levenshtein'
@@ -210,15 +222,15 @@ export function PlaygroundView({
               </div>
 
               <div className="flex max-h-48 flex-wrap gap-1 overflow-y-auto rounded-lg border border-slate-800 bg-[#0F172A] p-3">
-                {embedResult.steps.map((step) => {
+                {embedResult.steps.map((step, idx) => {
                   const isV1 = step.selected_group === 1
                   const bitHit = step.selected_group === step.target_bit
-                  const isSelected = selectedStep?.step === step.step
+                  const isSelected = selectedStepIdx === idx
                   return (
                     <button
                       key={step.step}
                       type="button"
-                      onClick={() => setSelectedStep(isSelected ? null : step)}
+                      onClick={() => setSelectedStepIdx(idx)}
                       className={cn(
                         'rounded border px-1.5 py-0.5 font-mono text-xs transition-colors',
                         isV1
@@ -235,26 +247,11 @@ export function PlaygroundView({
                 })}
               </div>
 
-              {selectedStep && (
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-slate-700 bg-[#0F172A] px-3 py-2 font-mono text-xs text-slate-300 tabular-nums">
-                  <span>
-                    step <strong className="text-white">#{selectedStep.step}</strong>
-                  </span>
-                  <span>
-                    token <strong className="text-white">{JSON.stringify(selectedStep.token_text)}</strong> (id{' '}
-                    {selectedStep.token_id})
-                  </span>
-                  <span>
-                    target <strong className="text-emerald-300">{selectedStep.target_bit}</strong> / picked{' '}
-                    <strong className={selectedStep.selected_group === 1 ? 'text-emerald-300' : 'text-red-300'}>
-                      V{selectedStep.selected_group}
-                    </strong>
-                  </span>
-                  <span>pre-bias margin {selectedStep.pre_bias_margin.toFixed(3)}</span>
-                  <span>flipped: {selectedStep.bias_flipped_choice ? 'yes' : 'no'}</span>
-                  <span>TI retries: {selectedStep.ti_retries}</span>
-                </div>
-              )}
+              <TokenLogitInspector
+                steps={embedResult.steps}
+                selectedIdx={selectedStepIdx}
+                onSelectIdx={setSelectedStepIdx}
+              />
             </div>
           </div>
         )}
@@ -280,6 +277,45 @@ export function PlaygroundView({
           )}
         </div>
 
+        <div className="mb-3 flex flex-wrap items-center gap-4 rounded-lg border border-slate-800 bg-[#0F172A]/80 px-3 py-2">
+          <div className="flex items-center gap-2.5">
+            <label htmlFor="attack-budget-slider" className="text-xs font-medium text-slate-300">
+              Token Attack Budget
+            </label>
+            <input
+              id="attack-budget-slider"
+              type="range"
+              min={0.05}
+              max={0.3}
+              step={0.05}
+              value={attackBudget}
+              onChange={(e) => onChangeAttackBudget(Number(e.target.value))}
+              className="w-28 accent-amber-400"
+            />
+            <span className="w-10 font-mono text-xs font-semibold text-amber-300 tabular-nums">
+              {(attackBudget * 100).toFixed(0)}%
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="attack-seed-input" className="text-xs font-medium text-slate-300">
+              Seed
+            </label>
+            <input
+              id="attack-seed-input"
+              type="number"
+              min={0}
+              max={999}
+              value={attackSeed}
+              onChange={(e) => {
+                const parsed = Number.parseInt(e.target.value, 10)
+                onChangeAttackSeed(Number.isNaN(parsed) ? 0 : Math.max(0, parsed))
+              }}
+              className="w-16 rounded border border-slate-700 bg-[#1B2336] px-2 py-1 font-mono text-xs text-slate-200 tabular-nums focus:border-emerald-500 focus:outline-none"
+            />
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-2 pb-3">
           {ATTACK_BUTTONS.map(({ id, label }) => (
             <button
@@ -290,7 +326,9 @@ export function PlaygroundView({
               className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-[#272F42] px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:border-amber-500/50 hover:text-amber-200 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
             >
               <Scissors className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{label}</span>
+              <span>
+                {label} ({(attackBudget * 100).toFixed(0)}%)
+              </span>
             </button>
           ))}
 
@@ -405,51 +443,12 @@ export function PlaygroundView({
               />
             </div>
 
-            <div className="space-y-2 rounded-lg border border-slate-800 bg-[#0F172A] p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-                <span>
-                  Bit Alignment ({extractResult.candidate_bits.length} extracted vs{' '}
-                  {extractResult.matched_codeword.length} codeword bits)
-                </span>
-                <div className="flex flex-wrap items-center gap-3 font-mono text-[11px]">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-xs bg-emerald-500" /> Match
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-xs bg-amber-400" /> Sub
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-xs bg-sky-400" /> Ins
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-xs bg-red-500" /> Del
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-0.5">
-                {extractResult.alignment.slice(0, 140).map((op, idx) => (
-                  <span
-                    key={idx}
-                    title={`${op.kind}: src=${op.source_bit ?? '-'} -> tgt=${op.target_bit ?? '-'}`}
-                    className={cn(
-                      'inline-flex h-4 w-2.5 items-center justify-center rounded-[2px] font-mono text-[9px] text-slate-950 font-bold',
-                      op.kind === 'match' && 'bg-emerald-500/85',
-                      op.kind === 'substitute' && 'bg-amber-400',
-                      op.kind === 'insert' && 'bg-sky-400',
-                      op.kind === 'delete' && 'bg-red-500 text-white',
-                    )}
-                  >
-                    {op.kind === 'delete' ? '-' : (op.target_bit ?? op.source_bit ?? '')}
-                  </span>
-                ))}
-                {extractResult.alignment.length > 140 && (
-                  <span className="ml-1 self-center font-mono text-[10px] text-slate-500">
-                    +{extractResult.alignment.length - 140} ops
-                  </span>
-                )}
-              </div>
-            </div>
+            <AlignmentFrameshiftPanel
+              targetWatermark={watermark}
+              u={config.u}
+              primaryResult={extractResult}
+              comparison={decoderComparison}
+            />
           </div>
         )}
       </section>

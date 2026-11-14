@@ -26,6 +26,39 @@ export interface TokenStepTrace {
   bias_flipped_choice: boolean
   pre_bias_margin: number
   ti_retries: number
+  top_v1_token?: string
+  top_v0_token?: string
+  top_v1_logit?: number
+  top_v0_logit?: number
+  bias_delta?: number
+  v1_fraction?: number
+}
+
+export interface DistanceSpectrumStats {
+  bins: number[]
+  minFromW: number
+  maxFromW: number
+  meanFromW: number
+  nnMin: number
+  nnMax: number
+  zeroSpread: boolean
+}
+
+export interface DualDecoderComparison {
+  hamming: ExtractResponse | null
+  levenshtein: ExtractResponse
+  bch: ExtractResponse | null
+}
+
+export interface BchCurvePoint {
+  n: number
+  u: number
+  nativeLength: number
+  fieldDegree: number
+  messageCapacity: number
+  shorteningBits: number
+  t: number
+  correctionRate: number
 }
 
 export interface QualitySnapshot {
