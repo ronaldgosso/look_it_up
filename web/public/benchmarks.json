@@ -1,0 +1,177 @@
+{
+  "system": {
+    "backend": "rust-native",
+    "abi_version": 2,
+    "native_path": "C:\\Users\\Neptune\\Documents\\Projects\\paper_research\\target\\release\\llmw_native.dll",
+    "threads": 8
+  },
+  "config": {
+    "n": 12,
+    "u": 127,
+    "delta": 6.0,
+    "attack_budget": 0.1,
+    "num_samples": 16
+  },
+  "speed_comparison": {
+    "n": 15,
+    "u": 127,
+    "entries": 32768,
+    "python_hamming_ms": 9.347,
+    "python_levenshtein_ms": 756.137,
+    "rust_available": true,
+    "rust_hamming_ms": 2.371,
+    "rust_levenshtein_ms": 13.516,
+    "hamming_speedup": 3.94,
+    "levenshtein_speedup": 55.94
+  },
+  "attack_robustness": [
+    {
+      "method": "levenshtein",
+      "attack": "clean",
+      "match_rate": 1.0,
+      "mean_distance": 0.12,
+      "samples": 16
+    },
+    {
+      "method": "levenshtein",
+      "attack": "word_deletion",
+      "match_rate": 1.0,
+      "mean_distance": 21.44,
+      "samples": 16
+    },
+    {
+      "method": "levenshtein",
+      "attack": "word_insertion",
+      "match_rate": 0.5625,
+      "mean_distance": 28.5,
+      "samples": 16
+    },
+    {
+      "method": "levenshtein",
+      "attack": "synonym_swap",
+      "match_rate": 1.0,
+      "mean_distance": 19.62,
+      "samples": 16
+    },
+    {
+      "method": "levenshtein",
+      "attack": "paraphrase",
+      "match_rate": 1.0,
+      "mean_distance": 13.25,
+      "samples": 16
+    },
+    {
+      "method": "hamming",
+      "attack": "clean",
+      "match_rate": 1.0,
+      "mean_distance": 0.12,
+      "samples": 16
+    },
+    {
+      "method": "hamming",
+      "attack": "word_deletion",
+      "match_rate": 0.0,
+      "mean_distance": 43.62,
+      "samples": 16
+    },
+    {
+      "method": "hamming",
+      "attack": "word_insertion",
+      "match_rate": 0.0,
+      "mean_distance": 43.0,
+      "samples": 16
+    },
+    {
+      "method": "hamming",
+      "attack": "synonym_swap",
+      "match_rate": 0.1875,
+      "mean_distance": 41.31,
+      "samples": 16
+    },
+    {
+      "method": "hamming",
+      "attack": "paraphrase",
+      "match_rate": 0.125,
+      "mean_distance": 41.5,
+      "samples": 16
+    },
+    {
+      "method": "bch",
+      "attack": "clean",
+      "match_rate": 1.0,
+      "mean_distance": 0.12,
+      "samples": 16
+    },
+    {
+      "method": "bch",
+      "attack": "word_deletion",
+      "match_rate": 0.0,
+      "mean_distance": 57.0,
+      "samples": 16
+    },
+    {
+      "method": "bch",
+      "attack": "word_insertion",
+      "match_rate": 0.0,
+      "mean_distance": 55.94,
+      "samples": 16
+    },
+    {
+      "method": "bch",
+      "attack": "synonym_swap",
+      "match_rate": 0.0,
+      "mean_distance": 57.94,
+      "samples": 16
+    },
+    {
+      "method": "bch",
+      "attack": "paraphrase",
+      "match_rate": 0.0,
+      "mean_distance": 58.81,
+      "samples": 16
+    }
+  ],
+  "roc_auroc": {
+    "levenshtein": {
+      "auroc": 1.0,
+      "tpr_at_1pct_fpr": 1.0,
+      "threshold_at_1pct_fpr": 26
+    },
+    "hamming": {
+      "auroc": 1.0,
+      "tpr_at_1pct_fpr": 1.0,
+      "threshold_at_1pct_fpr": 40
+    },
+    "bch": {
+      "auroc": 1.0,
+      "tpr_at_1pct_fpr": 1.0,
+      "threshold_at_1pct_fpr": 47
+    }
+  },
+  "entropy_regime_match_rate": {
+    "base": {
+      "levenshtein": 1.0,
+      "hamming": 1.0,
+      "bch": 1.0
+    },
+    "instruct": {
+      "levenshtein": 0.375,
+      "hamming": 1.0,
+      "bch": 0.25
+    }
+  },
+  "quality_comparison": {
+    "watermarked": {
+      "distinct_1": 0.356,
+      "distinct_2": 0.5975,
+      "trigram_rep": 0.2218,
+      "perplexity": 27.7809
+    },
+    "non_watermarked": {
+      "distinct_1": 0.1305,
+      "distinct_2": 0.1342,
+      "trigram_rep": 0.8644,
+      "perplexity": 6.5688
+    }
+  }
+}

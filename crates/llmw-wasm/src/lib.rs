@@ -58,6 +58,44 @@ pub unsafe extern "C" fn wasm_linear_encode(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn wasm_encode_codeword(
+    key_ptr: *const u8,
+    key_len: usize,
+    n: usize,
+    u: usize,
+    construction: u32,
+    watermark: u32,
+    out_ptr: *mut u8,
+) {
+    let key = slice::from_raw_parts(key_ptr, key_len);
+    let out = slice::from_raw_parts_mut(out_ptr, u);
+    if construction == 0 {
+        let cw = PackedCodebook::encode_linear(key, n, u, watermark);
+        out.copy_from_slice(&cw);
+    } else {
+        let s = watermark.to_string();
+        let mut buf = Vec::with_capacity(key.len() + s.len());
+        buf.extend_from_slice(key);
+        buf.extend_from_slice(s.as_bytes());
+        let seed_i = llmw_core::prng::sha256_seed64(&buf);
+        let cw = llmw_core::prng::SplitMix64::new(seed_i).next_bits(u);
+        out.copy_from_slice(&cw);
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wasm_linear_d_min(
+    key_ptr: *const u8,
+    key_len: usize,
+    n: usize,
+    u: usize,
+) -> u32 {
+    let key = slice::from_raw_parts(key_ptr, key_len);
+    let cb = PackedCodebook::build(key, n, u, ConstructionKind::Linear);
+    cb.exact_linear_d_min()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wasm_codebook_search(
     key_ptr: *const u8,
     key_len: usize,
