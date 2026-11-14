@@ -3,7 +3,7 @@
 > Faithful **Rust + WebAssembly + Python** implementation, adversarial benchmark suite, and interactive zero-cost studio for **"Look It Up: Multi-bit LLM Watermarking via Codebook Search"** ([arXiv:2611.16890](https://arxiv.org/abs/2611.16890)) by Jarosław Janas, Paweł Morawiecki, and Josef Pieprzyk.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Phase 2: Rust Core + Benchmarks](https://img.shields.io/badge/Phase%202-Rust%20%2B%20WASM%20%2B%20Benchmarks-orange.svg)](docs/ROADMAP.md)
+[![Phase 3: Interactive WASM Studio](https://img.shields.io/badge/Phase%203-Interactive%20WASM%20Studio-22c55e.svg)](docs/ROADMAP.md)
 
 ## Overview
 
@@ -17,8 +17,9 @@ Existing multi-bit LLM watermarks force an uncomfortable trade-off on short text
   - Bit-packed `PackedCodebook` (4x lower memory than byte arrays) with `std::thread::scope` multi-threaded nearest-neighbor search (`codebook.rs`).
   - Narrow-sense primitive binary BCH over $\mathrm{GF}(2^m)$ with Berlekamp–Massey, Chien search, and Table V code shortening (`bch.rs`).
 - **`crates/llmw-native`**: C-ABI shared library (`llmw_native.dll` / `.so` / `.dylib`) automatically loaded by Python via `ctypes` (`src/llmw_codebook/_rust_accel.py`) + standalone `llmw-bench` CLI binary.
-- **`crates/llmw-wasm`**: Zero-dependency `wasm32-unknown-unknown` target (`llmw_wasm.wasm`, ~58.9 KB) for zero-cost browser execution in the upcoming Interactive Studio.
-- **`src/llmw_codebook`**: Python orchestration layer providing Algorithm 2 & 3 embedder/extractor, Appendix F stepwise TI verification, Appendix B adversarial attacks, Appendix G quality & ROC/AUROC metrics, built-in zero-cost `BuiltinNGramModel`, optional `HuggingFaceBackend`, and reproducible benchmarks.
+- **`crates/llmw-wasm`**: Zero-dependency `wasm32-unknown-unknown` target (`llmw_wasm.wasm`, ~60.7 KB) for zero-cost client-side execution in the Interactive Studio.
+- **`web/`**: Vite + React + TypeScript Interactive Web Studio with a client-side `WebAssembly` engine (`llmwWasm.ts` + exported N-gram model assets), Playground, Benchmark Analyzer, and Codebook Inspector.
+- **`src/llmw_codebook`**: Python orchestration layer providing Algorithm 2 & 3 embedder/extractor, Appendix F stepwise TI verification, Appendix B adversarial attacks, Appendix G quality & ROC/AUROC metrics, built-in zero-cost `BuiltinNGramModel`, optional `HuggingFaceBackend`, optional FastAPI local bridge (`api.py`), and reproducible benchmarks.
 
 ## Measured Phase 2 Highlights
 
@@ -50,6 +51,13 @@ pytest -v
 
 # 4. Run full Phase 2 attack, quality & speed benchmark suite
 python scripts/run_benchmarks.py -n 12 -u 127 --samples-per-prompt 2
+
+# 5. Launch the Interactive Web Studio (100% browser WASM runtime)
+python scripts/export_web_assets.py
+cd web && npm install && npm run test && npm run dev
+
+# 6. (Optional) Start the Local Python + Multi-Threaded Rust API bridge
+uvicorn llmw_codebook.api:app --port 8000 --reload
 ```
 
 ## Project Structure
@@ -60,10 +68,11 @@ python scripts/run_benchmarks.py -n 12 -u 127 --samples-per-prompt 2
 │   ├── llmw-core/           # Pure Rust SHA-256, SplitMix64, Myers Levenshtein, PackedCodebook, BCH
 │   ├── llmw-native/         # Multi-threaded C-ABI cdylib + `llmw-bench` binary
 │   └── llmw-wasm/           # Zero-dep WebAssembly target (`wasm32-unknown-unknown`)
+├── web/                     # Vite + React + TypeScript + Tailwind v4 WASM Interactive Studio
 ├── benchmarks/              # Reproducible JSON results & Markdown summary
 ├── docs/ROADMAP.md          # 5-phase engineering & portfolio plan
 ├── papers/README.md         # Reference paper metadata & download instructions
-├── scripts/                 # Benchmark runner (`run_benchmarks.py`)
-├── src/llmw_codebook/       # Python package + automatic Rust ctypes accelerator
-└── tests/                   # 22 Python tests + 5 Rust integration tests
+├── scripts/                 # Benchmark runner & web asset exporter
+├── src/llmw_codebook/       # Python package + FastAPI bridge + Rust ctypes accelerator
+└── tests/                   # Python unit, parity & FastAPI tests + Rust & Vitest suites
 ```
