@@ -6,7 +6,7 @@ import {
   RotateCcw,
   Scissors,
   SearchCheck,
-  Sparkles,
+  Terminal,
   XCircle,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -47,11 +47,23 @@ interface PlaygroundViewProps {
   onExtractNow: () => void
 }
 
-const PROMPT_PRESETS = [
-  'Language model watermarking embeds an undetectable',
-  'Cryptographic pseudorandom generators partition the',
-  'Robust multi-bit verification relies on',
-  'Error-correcting codebooks allow decoders to',
+const PROMPT_PRESETS: Array<{ label: string; text: string }> = [
+  {
+    label: 'Watermarking',
+    text: 'Language model watermarking embeds an undetectable',
+  },
+  {
+    label: 'PRG Partition',
+    text: 'Cryptographic pseudorandom generators partition the',
+  },
+  {
+    label: 'Multi-bit Verify',
+    text: 'Robust multi-bit verification relies on',
+  },
+  {
+    label: 'Error-Correcting',
+    text: 'Error-correcting codebooks allow decoders to',
+  },
 ]
 
 const ATTACK_BUTTONS: Array<{ id: AttackType; label: string }> = [
@@ -117,48 +129,55 @@ export function PlaygroundView({
       {errorMessage && (
         <div
           role="alert"
-          className="flex items-start gap-2.5 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-200"
+          className="flex items-start gap-2.5 rounded-lg border border-red-500/45 bg-red-500/12 p-3 text-xs text-danger-ink"
         >
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" aria-hidden="true" />
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden="true" />
           <span>{errorMessage}</span>
         </div>
       )}
 
-      {/* Stage 1: Prompt & Embed */}
-      <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
-          <div>
-            <span className="font-mono text-[11px] font-medium tracking-wider text-emerald-400 uppercase">
-              Stage 1 · Logit-Biased Generation
+      <section aria-labelledby="stage-1-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
+          <div className="flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="inline-flex size-6 shrink-0 items-center justify-center rounded border border-emerald-500/40 bg-emerald-500/12 font-mono text-xs font-semibold text-accent-ink"
+            >
+              1
             </span>
-            <h2 className="text-base font-semibold text-slate-100 text-balance">
+            <h2 id="stage-1-heading" className="text-base font-semibold text-ink text-balance">
               Embed {config.n}-bit Codeword into Token Stream
             </h2>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded bg-[#272F42] px-2.5 py-1 font-mono text-[11px] text-slate-300">
-            <Cpu className="h-3 w-3 text-emerald-400" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 rounded border border-border bg-surface-inset px-2.5 py-1 font-mono text-xs text-ink-secondary">
+            <Cpu className="size-3.5 text-accent" aria-hidden="true" />
             <span>{runtimeLabel}</span>
           </span>
         </div>
 
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] text-slate-400">Presets:</span>
-            {PROMPT_PRESETS.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => onChangePrompt(preset)}
-                className={cn(
-                  'rounded border px-2 py-1 text-[11px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500',
-                  prompt === preset
-                    ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300'
-                    : 'border-slate-700 bg-[#0F172A] text-slate-300 hover:border-slate-500',
-                )}
-              >
-                {preset}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Prompt presets">
+            <span className="text-xs text-ink-muted">Presets:</span>
+            {PROMPT_PRESETS.map((preset) => {
+              const selected = prompt === preset.text
+              return (
+                <button
+                  key={preset.label}
+                  type="button"
+                  title={preset.text}
+                  onClick={() => onChangePrompt(preset.text)}
+                  aria-pressed={selected}
+                  className={cn(
+                    'min-h-7 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
+                    selected
+                      ? 'border-emerald-500/55 bg-emerald-500/15 text-accent-ink'
+                      : 'border-border-strong bg-surface-inset text-ink-secondary hover:border-ink-muted hover:text-ink',
+                  )}
+                >
+                  {preset.label}
+                </button>
+              )
+            })}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -172,7 +191,7 @@ export function PlaygroundView({
                 value={prompt}
                 onChange={(e) => onChangePrompt(e.target.value)}
                 placeholder="Enter a seed prompt..."
-                className="w-full rounded-lg border border-slate-700 bg-[#0F172A] px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                className="min-h-10 w-full rounded-lg border border-border-strong bg-surface-inset px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:border-emerald-400"
               />
             </div>
 
@@ -180,48 +199,50 @@ export function PlaygroundView({
               type="button"
               disabled={!wasmReady || busy}
               onClick={onEmbed}
-              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-400 disabled:opacity-50"
             >
-              <Play className="h-4 w-4 fill-current" aria-hidden="true" />
+              <Play className="size-4 fill-current" aria-hidden="true" />
               <span>{busy ? 'Running...' : 'Embed & Generate'}</span>
             </button>
           </div>
         </div>
 
         {embedResult && (
-          <div className="mt-4 space-y-4 border-t border-slate-800 pt-4">
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
-              <MetricTile
+          <div className="mt-4 space-y-4 border-t border-border pt-4">
+            <dl className="grid grid-cols-2 divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface-inset sm:grid-cols-5 sm:divide-x sm:divide-y-0">
+              <KpiCell
                 label="Bit Accuracy"
                 value={`${(embedResult.embedded_bit_accuracy * 100).toFixed(1)}%`}
                 accent
               />
-              <MetricTile
-                label="Bias Flips"
-                value={`${biasFlips}/${embedResult.steps.length}`}
-              />
-              <MetricTile label="TI Retries" value={`${embedResult.ti_corrections}`} />
-              <MetricTile
+              <KpiCell label="Bias Flips" value={`${biasFlips}/${embedResult.steps.length}`} />
+              <KpiCell label="TI Retries" value={`${embedResult.ti_corrections}`} />
+              <KpiCell
                 label="Distinct-1 / 2"
                 value={`${embedResult.quality.distinct_1.toFixed(2)} / ${embedResult.quality.distinct_2.toFixed(2)}`}
               />
-              <MetricTile label="Embed Latency" value={`${embedResult.latency_ms.toFixed(1)} ms`} />
-            </div>
+              <KpiCell label="Embed Latency" value={`${embedResult.latency_ms.toFixed(1)} ms`} />
+            </dl>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Token Stream Ribbon (click a token to inspect V1/V0 logit margin)</span>
-                <div className="flex items-center gap-3 font-mono text-[11px]">
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-xs bg-emerald-500" /> V1
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="text-ink-secondary">
+                  Token Stream Ribbon (select any token to inspect logit competition)
+                </span>
+                <div className="flex items-center gap-3 font-mono text-xs text-ink-secondary">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-xs bg-emerald-500" aria-hidden="true" /> V1
                   </span>
-                  <span className="inline-flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-xs bg-red-500" /> V0
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-xs bg-rose-500" aria-hidden="true" /> V0
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="size-2.5 rounded-xs border-b-2 border-amber-400" aria-hidden="true" /> Bit mismatch
                   </span>
                 </div>
               </div>
 
-              <div className="flex max-h-48 flex-wrap gap-1 overflow-y-auto rounded-lg border border-slate-800 bg-[#0F172A] p-3">
+              <div className="studio-scroll flex max-h-48 flex-wrap gap-1.5 overflow-y-auto rounded-lg border border-border bg-surface-inset p-3">
                 {embedResult.steps.map((step, idx) => {
                   const isV1 = step.selected_group === 1
                   const bitHit = step.selected_group === step.target_bit
@@ -231,17 +252,18 @@ export function PlaygroundView({
                       key={step.step}
                       type="button"
                       onClick={() => setSelectedStepIdx(idx)}
+                      aria-pressed={isSelected}
                       className={cn(
-                        'rounded border px-1.5 py-0.5 font-mono text-xs transition-colors',
+                        'rounded border px-2 py-0.5 font-mono text-xs transition-colors',
                         isV1
-                          ? 'border-emerald-500/35 bg-emerald-500/12 text-emerald-200 hover:border-emerald-400'
-                          : 'border-red-500/35 bg-red-500/12 text-red-200 hover:border-red-400',
-                        !bitHit && 'underline decoration-amber-400 decoration-dashed',
-                        isSelected && 'ring-2 ring-slate-200',
+                          ? 'border-emerald-500/30 bg-emerald-500/12 text-emerald-100 hover:border-emerald-400/70'
+                          : 'border-rose-500/30 bg-surface-elevated text-ink-secondary hover:border-rose-400/70',
+                        !bitHit && 'border-b-2 border-b-amber-400',
+                        isSelected && 'bg-emerald-500/25 text-ink ring-2 ring-emerald-400',
                       )}
                       title={`t=${step.step} | target=${step.target_bit} | group=V${step.selected_group} | margin=${step.pre_bias_margin}`}
                     >
-                      {step.token_text === ' ' ? '·' : step.token_text}
+                      {step.token_text === ' ' ? 'space' : step.token_text}
                     </button>
                   )
                 })}
@@ -257,29 +279,31 @@ export function PlaygroundView({
         )}
       </section>
 
-      {/* Stage 2: Channel Attacks & Manual Tampering */}
-      <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
+      <section aria-labelledby="stage-2-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
-          <div>
-            <span className="font-mono text-[11px] font-medium tracking-wider text-amber-400 uppercase">
-              Stage 2 · Appendix B Robustness Channel
+          <div className="flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="inline-flex size-6 shrink-0 items-center justify-center rounded border border-amber-500/40 bg-amber-500/12 font-mono text-xs font-semibold text-warning-ink"
+            >
+              2
             </span>
-            <h2 className="text-base font-semibold text-slate-100 text-balance">
-              Simulate Deletion, Insertion, Synonym Swap &amp; Paraphrase Attacks
+            <h2 id="stage-2-heading" className="text-base font-semibold text-ink text-balance">
+              Adversarial Channel Attacks &amp; Manual Tampering
             </h2>
           </div>
 
           {attackMeta && (
-            <span className="rounded bg-[#272F42] px-2.5 py-1 font-mono text-[11px] text-slate-300 tabular-nums">
+            <span className="rounded border border-border bg-surface-inset px-2.5 py-1 font-mono text-xs text-ink-secondary tabular-nums">
               {attackMeta.attack_name}: {attackMeta.modified_tokens}/{attackMeta.budget_tokens} tok edited (
-              {attackMeta.original_tokens} -&gt; {attackMeta.attacked_tokens})
+              {attackMeta.original_tokens} to {attackMeta.attacked_tokens})
             </span>
           )}
         </div>
 
-        <div className="mb-3 flex flex-wrap items-center gap-4 rounded-lg border border-slate-800 bg-[#0F172A]/80 px-3 py-2">
-          <div className="flex items-center gap-2.5">
-            <label htmlFor="attack-budget-slider" className="text-xs font-medium text-slate-300">
+        <div className="mb-3 flex flex-wrap items-center gap-4 rounded-lg border border-border bg-surface-inset px-3.5 py-2.5">
+          <div className="flex items-center gap-3">
+            <label htmlFor="attack-budget-slider" className="text-xs font-medium text-ink-secondary">
               Token Attack Budget
             </label>
             <input
@@ -290,15 +314,15 @@ export function PlaygroundView({
               step={0.05}
               value={attackBudget}
               onChange={(e) => onChangeAttackBudget(Number(e.target.value))}
-              className="w-28 accent-amber-400"
+              className="h-2 w-28 accent-amber-400"
             />
-            <span className="w-10 font-mono text-xs font-semibold text-amber-300 tabular-nums">
+            <span className="w-10 font-mono text-xs font-semibold text-warning-ink tabular-nums">
               {(attackBudget * 100).toFixed(0)}%
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <label htmlFor="attack-seed-input" className="text-xs font-medium text-slate-300">
+            <label htmlFor="attack-seed-input" className="text-xs font-medium text-ink-secondary">
               Seed
             </label>
             <input
@@ -311,7 +335,7 @@ export function PlaygroundView({
                 const parsed = Number.parseInt(e.target.value, 10)
                 onChangeAttackSeed(Number.isNaN(parsed) ? 0 : Math.max(0, parsed))
               }}
-              className="w-16 rounded border border-slate-700 bg-[#1B2336] px-2 py-1 font-mono text-xs text-slate-200 tabular-nums focus:border-emerald-500 focus:outline-none"
+              className="min-h-8 w-16 rounded border border-border-strong bg-surface px-2 py-1 font-mono text-xs text-ink tabular-nums focus:border-emerald-400"
             />
           </div>
         </div>
@@ -323,9 +347,9 @@ export function PlaygroundView({
               type="button"
               disabled={!embedResult || busy}
               onClick={() => onAttack(id)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-[#272F42] px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:border-amber-500/50 hover:text-amber-200 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border-strong bg-surface-elevated px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-amber-500/60 hover:text-warning-ink disabled:opacity-45"
             >
-              <Scissors className="h-3.5 w-3.5" aria-hidden="true" />
+              <Scissors className="size-3.5" aria-hidden="true" />
               <span>
                 {label} ({(attackBudget * 100).toFixed(0)}%)
               </span>
@@ -336,25 +360,25 @@ export function PlaygroundView({
             type="button"
             disabled={!embedResult || busy}
             onClick={onResetText}
-            className="inline-flex items-center gap-1.5 rounded-md border border-slate-700 bg-[#0F172A] px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border-strong bg-surface-inset px-3 py-1.5 text-xs font-medium text-ink-secondary transition-colors hover:border-ink-muted hover:text-ink disabled:opacity-45"
           >
-            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+            <RotateCcw className="size-3.5" aria-hidden="true" />
             <span>Reset to Generated</span>
           </button>
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label htmlFor="playground-suspect-text" className="text-xs font-medium text-slate-300">
-              Suspect / Attacked Output (editable for custom tampering)
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label htmlFor="playground-suspect-text" className="text-xs font-medium text-ink-secondary">
+              Suspect / Attacked Output (editable for manual tampering)
             </label>
             <button
               type="button"
               disabled={!wasmReady || !suspectText.trim() || busy}
               onClick={onExtractNow}
-              className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300 transition-colors hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-emerald-500/45 bg-emerald-500/12 px-3 py-1 text-xs font-medium text-accent-ink transition-colors hover:bg-emerald-500/20 disabled:opacity-45"
             >
-              <SearchCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              <SearchCheck className="size-3.5" aria-hidden="true" />
               <span>Extract &amp; Verify</span>
             </button>
           </div>
@@ -364,38 +388,42 @@ export function PlaygroundView({
             value={suspectText}
             onChange={(e) => onChangeSuspectText(e.target.value)}
             placeholder="Generate watermarked prose above or paste any suspect text to run decoder search..."
-            className="w-full rounded-lg border border-slate-700 bg-[#0F172A] p-3 font-mono text-xs leading-relaxed text-slate-200 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+            className="w-full rounded-lg border border-border-strong bg-surface-inset p-3 font-mono text-xs leading-relaxed text-ink placeholder:text-ink-muted focus:border-emerald-400"
           />
         </div>
       </section>
 
-      {/* Stage 3: Codebook Extraction & Alignment Verdict */}
-      <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5">
+      <section aria-labelledby="stage-3-heading" className="rounded-xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
-          <div>
-            <span className="font-mono text-[11px] font-medium tracking-wider text-emerald-400 uppercase">
-              Stage 3 · Codebook Search Decoder
+          <div className="flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="inline-flex size-6 shrink-0 items-center justify-center rounded border border-emerald-500/40 bg-emerald-500/12 font-mono text-xs font-semibold text-accent-ink"
+            >
+              3
             </span>
-            <h2 className="text-base font-semibold text-slate-100 text-balance">
-              Recovered Watermark Verdict &amp; Bit Alignment
+            <h2 id="stage-3-heading" className="text-base font-semibold text-ink text-balance">
+              Codebook Extraction Verdict &amp; Sequence Alignment
             </h2>
           </div>
 
           {verdictKind !== 'idle' && (
             <span
+              role="status"
+              aria-live="polite"
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs font-semibold',
                 verdictKind === 'matched' &&
-                  'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
+                  'border-emerald-500/45 bg-emerald-500/15 text-accent-ink',
                 verdictKind === 'mismatch' &&
-                  'border-amber-500/40 bg-amber-500/15 text-amber-300',
+                  'border-amber-500/45 bg-amber-500/15 text-warning-ink',
                 verdictKind === 'unwatermarked' &&
-                  'border-red-500/40 bg-red-500/15 text-red-300',
+                  'border-red-500/45 bg-red-500/15 text-danger-ink',
               )}
             >
-              {verdictKind === 'matched' && <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />}
-              {verdictKind === 'mismatch' && <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />}
-              {verdictKind === 'unwatermarked' && <XCircle className="h-3.5 w-3.5" aria-hidden="true" />}
+              {verdictKind === 'matched' && <CheckCircle2 className="size-3.5" aria-hidden="true" />}
+              {verdictKind === 'mismatch' && <AlertTriangle className="size-3.5" aria-hidden="true" />}
+              {verdictKind === 'unwatermarked' && <XCircle className="size-3.5" aria-hidden="true" />}
               <span>
                 {verdictKind === 'matched'
                   ? 'EXACT MATCH'
@@ -408,23 +436,34 @@ export function PlaygroundView({
         </div>
 
         {!extractResult ? (
-          <div className="flex items-center gap-2.5 rounded-lg border border-dashed border-slate-700 bg-[#0F172A]/60 p-6 text-xs text-slate-400">
-            <Sparkles className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-            <span>
-              Run <strong>Embed &amp; Generate</strong> to test exhaustive Levenshtein, Hamming, or BCH codebook recovery.
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-border-strong bg-surface-inset p-5">
+            <div className="flex items-start gap-2.5 text-xs text-ink-secondary text-pretty">
+              <Terminal className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
+              <span>
+                No extracted bitstring yet. Generate watermarked tokens in step 1 or paste suspect text above to compare Levenshtein, Hamming, and BCH decoders.
+              </span>
+            </div>
+            <button
+              type="button"
+              disabled={!wasmReady || busy}
+              onClick={onEmbed}
+              className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md border border-emerald-500/45 bg-emerald-500/12 px-3 py-1.5 text-xs font-semibold text-accent-ink transition-colors hover:bg-emerald-500/20 disabled:opacity-45"
+            >
+              <Play className="size-3.5 fill-current" aria-hidden="true" />
+              <span>Run Sample Extraction</span>
+            </button>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
-              <MetricTile
+            <dl className="grid grid-cols-2 divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface-inset sm:grid-cols-5 sm:divide-x sm:divide-y-0">
+              <KpiCell
                 label="Recovered ID"
                 value={`${extractResult.watermark}`}
                 subValue={`target ${watermark}`}
                 accent={matchedExact}
               />
-              <MetricTile label={metricLabel} value={`${extractResult.distance}`} />
-              <MetricTile
+              <KpiCell label={metricLabel} value={`${extractResult.distance}`} />
+              <KpiCell
                 label="2nd-Best Dist"
                 value={
                   extractResult.second_best_distance !== null
@@ -432,16 +471,13 @@ export function PlaygroundView({
                     : 'N/A'
                 }
               />
-              <MetricTile
+              <KpiCell
                 label="Separation Margin"
                 value={extractResult.margin !== null ? `+${extractResult.margin}` : 'N/A'}
                 accent={(extractResult.margin ?? 0) > 0}
               />
-              <MetricTile
-                label="Search Latency"
-                value={`${extractResult.latency_ms.toFixed(2)} ms`}
-              />
-            </div>
+              <KpiCell label="Search Latency" value={`${extractResult.latency_ms.toFixed(2)} ms`} />
+            </dl>
 
             <AlignmentFrameshiftPanel
               targetWatermark={watermark}
@@ -456,7 +492,7 @@ export function PlaygroundView({
   )
 }
 
-function MetricTile({
+function KpiCell({
   label,
   value,
   subValue,
@@ -468,17 +504,17 @@ function MetricTile({
   accent?: boolean
 }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-[#0F172A] px-3 py-2">
-      <div className="text-[11px] text-slate-400">{label}</div>
-      <div
+    <div className="px-3.5 py-2.5">
+      <dt className="text-xs text-ink-muted">{label}</dt>
+      <dd
         className={cn(
           'mt-0.5 font-mono text-sm font-semibold tabular-nums',
-          accent ? 'text-emerald-300' : 'text-slate-100',
+          accent ? 'text-accent-ink' : 'text-ink',
         )}
       >
         {value}
-      </div>
-      {subValue && <div className="font-mono text-[10px] text-slate-500 tabular-nums">{subValue}</div>}
+      </dd>
+      {subValue && <dd className="font-mono text-xs text-ink-muted tabular-nums">{subValue}</dd>}
     </div>
   )
 }

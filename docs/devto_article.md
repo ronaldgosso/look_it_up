@@ -13,6 +13,8 @@ After implementing "Look It Up: Multi-bit LLM Watermarking via Codebook Search" 
 
 Live browser client ($0 backend): [Look It Up Interactive WASM Studio](https://ronaldgosso.github.io/look_it_up/)
 
+The studio and the banner above carry the repository's Codex Aperture SVG mark (`docs/assets/brand/`), depicting split codebook wings framing a diamond cipher bit.
+
 {% github ronaldgosso/look_it_up %}
 
 ## Codebook Watermarking in Four Steps

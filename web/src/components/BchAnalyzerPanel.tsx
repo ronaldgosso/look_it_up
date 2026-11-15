@@ -1,8 +1,8 @@
 import { AlertTriangle, CheckCircle2, Cpu, Scissors, Zap } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { computeBchShorteningCurve, simulateBchChannel } from '../engine/watermarkEngine'
-import type { LlmwWasmClient } from '../wasm/llmwWasm'
 import { cn } from '../utils/cn'
+import type { LlmwWasmClient } from '../wasm/llmwWasm'
 
 interface BchAnalyzerPanelProps {
   n: number
@@ -62,66 +62,73 @@ export function BchAnalyzerPanel({
     )
   }
 
-  // SVG Curve Geometry
   const width = 680
-  const height = 210
-  const padL = 38
+  const height = 224
+  const padL = 42
   const padR = 16
-  const padT = 18
-  const padB = 30
+  const padT = 26
+  const padB = 34
   const plotW = width - padL - padR
   const plotH = height - padT - padB
   const maxT = Math.max(10, ...curvePoints.map((p) => p.t))
   const toX = (nVal: number) => padL + ((nVal - 8) / (32 - 8)) * plotW
   const toY = (tVal: number) => padT + plotH - (tVal / maxT) * plotH
 
-  return (
-    <section className="rounded-xl border border-slate-800 bg-[#1B2336] p-4 sm:p-5 space-y-5">
-      {/* Curve Header & Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <span className="font-mono text-[11px] font-medium tracking-wider text-emerald-400 uppercase">
-            Table V &amp; Appendix D · BCH Algebraic Scaling
-          </span>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-            <Cpu className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-            <span>Shortened BCH Error-Correction Frontier (Payload n vs. Capability t)</span>
-          </h3>
-        </div>
+  const activeX = toX(n)
+  const activeY = toY(currentT)
+  const activeTagText = `Active (${n}b, t=${currentT})`
+  const activeTagW = 114
+  const activeTagX = Math.max(padL + 2, Math.min(width - padR - activeTagW, activeX - activeTagW / 2))
+  const placeBelow = activeY < padT + 26
+  const activeTagY = placeBelow ? activeY + 11 : activeY - 26
 
-        <div className="flex flex-wrap items-center gap-3 font-mono text-[11px]">
+  return (
+    <section
+      aria-labelledby="bch-frontier-heading"
+      className="space-y-5 rounded-xl border border-border bg-surface p-4 sm:p-5"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 id="bch-frontier-heading" className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <Cpu className="size-4 text-accent" aria-hidden="true" />
+          <span>Shortened BCH Error-Correction Frontier (Payload n vs. Capability t)</span>
+        </h3>
+
+        <div className="flex flex-wrap items-center gap-3 font-mono text-xs">
           {CURVE_U_SERIES.map((s) => (
-            <span key={s.u} className="inline-flex items-center gap-1.5 text-slate-300">
-              <span className="h-0.5 w-3" style={{ backgroundColor: s.stroke }} />
+            <span key={s.u} className="inline-flex items-center gap-1.5 text-ink-secondary">
+              <span className="h-0.5 w-3" style={{ backgroundColor: s.stroke }} aria-hidden="true" />
               {s.label}
             </span>
           ))}
         </div>
       </div>
 
-      {/* Inline SVG BCH Capacity Curve */}
-      <div className="overflow-x-auto rounded-lg border border-slate-800 bg-[#0F172A] p-3">
+      <div className="studio-scroll overflow-x-auto rounded-lg border border-border bg-surface-inset p-3">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           role="img"
           aria-label="Shortened BCH correction capability t across payload bits n"
           className="w-full min-w-[480px] select-none"
         >
+          <title>
+            {`Shortened BCH error-correction bounds across n=8..32; active Studio operating point n=${n}, t=${currentT} bits`}
+          </title>
+
           {[0.25, 0.5, 0.75, 1].map((frac) => {
             const val = Math.round(maxT * frac)
             const y = toY(val)
             return (
               <g key={frac}>
                 <line x1={padL} x2={width - padR} y1={y} y2={y} stroke="#1E293B" strokeDasharray="3 3" />
-                <text x={padL - 6} y={y + 3} textAnchor="end" fill="#64748B" fontSize="9" fontFamily="monospace">
+                <text x={padL - 8} y={y + 4} textAnchor="end" fill="#94A3B8" fontSize="10" fontFamily="monospace">
                   {val}b
                 </text>
               </g>
             )
           })}
 
-          <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="#334155" />
-          <line x1={padL} x2={width - padR} y1={padT + plotH} y2={padT + plotH} stroke="#334155" />
+          <line x1={padL} x2={padL} y1={padT} y2={padT + plotH} stroke="#374869" />
+          <line x1={padL} x2={width - padR} y1={padT + plotH} y2={padT + plotH} stroke="#374869" />
 
           {CURVE_U_SERIES.map((series) => {
             const pts = curvePoints.filter((p) => p.u === series.u)
@@ -140,25 +147,30 @@ export function BchAnalyzerPanel({
             )
           })}
 
-          {/* Highlight active Studio (n, currentT) point */}
           {n >= 8 && n <= 32 && (
             <g>
-              <circle
-                cx={toX(n)}
-                cy={toY(currentT)}
-                r="6"
-                fill="none"
+              <circle cx={activeX} cy={activeY} r="6.5" fill="none" stroke="#F59E0B" strokeWidth="2" />
+              <rect
+                x={activeTagX}
+                y={activeTagY}
+                width={activeTagW}
+                height={18}
+                rx="4"
+                fill="#090E1A"
                 stroke="#F59E0B"
-                strokeWidth="2"
+                strokeOpacity="0.65"
+                strokeWidth="1"
               />
               <text
-                x={toX(n) + 8}
-                y={toY(currentT) + 16}
+                x={activeTagX + activeTagW / 2}
+                y={activeTagY + 12.5}
+                textAnchor="middle"
                 fill="#FCD34D"
                 fontSize="10"
+                fontWeight="600"
                 fontFamily="monospace"
               >
-                Active ({n}b, t={currentT})
+                {activeTagText}
               </text>
             </g>
           )}
@@ -167,7 +179,7 @@ export function BchAnalyzerPanel({
             <text
               key={nv}
               x={toX(nv)}
-              y={height - 10}
+              y={height - 12}
               textAnchor="middle"
               fill="#94A3B8"
               fontSize="10"
@@ -179,28 +191,35 @@ export function BchAnalyzerPanel({
         </svg>
       </div>
 
-      {/* Interactive BCH Bit-Flip & Frameshift Sandbox */}
       {bchTrial && (
-        <div className="rounded-lg border border-slate-800 bg-[#0F172A] p-3.5 space-y-3">
+        <div className="space-y-3 rounded-lg border border-border bg-surface-inset p-3.5 sm:p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
-                <Zap className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+              <div className="flex items-center gap-2 text-xs font-semibold text-ink">
+                <Zap className="size-4 text-accent" aria-hidden="true" />
                 <span>Interactive BCH Berlekamp-Massey Syndrome Sandbox (t = {currentT} bits)</span>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Click any codeword bit below to toggle channel noise or simulate a positional deletion frameshift.
+              <p className="mt-0.5 text-xs text-ink-muted">
+                Toggle individual codeword bits to inject channel noise or test a 1-bit deletion frameshift.
               </p>
             </div>
 
             {bchTrial.succeeded ? (
-              <span className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-300">
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+              <span
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded border border-emerald-500/45 bg-emerald-500/15 px-2.5 py-1 font-mono text-xs font-semibold text-accent-ink"
+              >
+                <CheckCircle2 className="size-3.5" aria-hidden="true" />
                 <span>DECODED ID {bchTrial.decodedWatermark} ({bchTrial.flips} fixed)</span>
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded border border-red-500/40 bg-red-500/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-red-300">
-                <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+              <span
+                role="status"
+                aria-live="polite"
+                className="inline-flex items-center gap-1.5 rounded border border-red-500/45 bg-red-500/15 px-2.5 py-1 font-mono text-xs font-semibold text-danger-ink"
+              >
+                <AlertTriangle className="size-3.5" aria-hidden="true" />
                 <span>
                   {dropFrameshift ? 'FRAMESHIFT DESYNC' : 'EXCEEDED t BOUND'} (got {bchTrial.decodedWatermark})
                 </span>
@@ -212,21 +231,21 @@ export function BchAnalyzerPanel({
             <button
               type="button"
               onClick={() => injectRandomFlips(Math.min(currentT, 3))}
-              className="rounded border border-slate-700 bg-[#1B2336] px-2.5 py-1 text-xs text-slate-200 hover:border-emerald-500/50"
+              className="min-h-8 rounded-md border border-border-strong bg-surface px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-emerald-500/60"
             >
               Inject {Math.min(currentT, 3)} Bit Flips (&le; t)
             </button>
             <button
               type="button"
               onClick={() => injectRandomFlips(currentT)}
-              className="rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300 hover:bg-emerald-500/20"
+              className="min-h-8 rounded-md border border-emerald-500/45 bg-emerald-500/12 px-3 py-1.5 text-xs font-semibold text-accent-ink transition-colors hover:bg-emerald-500/20"
             >
               Max Guarantee: Inject t={currentT} Flips
             </button>
             <button
               type="button"
               onClick={() => injectRandomFlips(currentT + 3)}
-              className="rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-300 hover:bg-amber-500/20"
+              className="min-h-8 rounded-md border border-amber-500/45 bg-amber-500/12 px-3 py-1.5 text-xs font-medium text-warning-ink transition-colors hover:bg-amber-500/20"
             >
               Overload: Inject {currentT + 3} Flips (&gt; t)
             </button>
@@ -235,13 +254,13 @@ export function BchAnalyzerPanel({
               onClick={() => setDropFrameshift((f) => !f)}
               aria-pressed={dropFrameshift}
               className={cn(
-                'inline-flex items-center gap-1 rounded border px-2.5 py-1 text-xs transition-colors',
+                'inline-flex min-h-8 items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
                 dropFrameshift
-                  ? 'border-red-500/50 bg-red-500/20 text-red-200'
-                  : 'border-slate-700 bg-[#1B2336] text-slate-300 hover:border-red-500/40',
+                  ? 'border-red-500/55 bg-red-500/20 text-danger-ink'
+                  : 'border-border-strong bg-surface text-ink-secondary hover:border-red-500/50 hover:text-ink',
               )}
             >
-              <Scissors className="h-3 w-3" aria-hidden="true" />
+              <Scissors className="size-3.5" aria-hidden="true" />
               <span>{dropFrameshift ? '1-Bit Deletion Active' : 'Inject 1 Deletion Frameshift'}</span>
             </button>
             <button
@@ -250,13 +269,13 @@ export function BchAnalyzerPanel({
                 setFlippedBits([])
                 setDropFrameshift(false)
               }}
-              className="rounded border border-slate-700 bg-[#0F172A] px-2.5 py-1 text-xs text-slate-400 hover:text-white"
+              className="min-h-8 rounded-md border border-border bg-surface-inset px-3 py-1.5 text-xs font-medium text-ink-muted transition-colors hover:border-border-strong hover:text-ink"
             >
               Clear Channel
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-0.5">
+          <div className="flex flex-wrap gap-1">
             {Array.from(bchTrial.originalCodeword).map((origBit, idx) => {
               const isFlipped = flippedBits.includes(idx)
               const isDropped = dropFrameshift && idx === Math.floor(u / 4)
@@ -265,22 +284,39 @@ export function BchAnalyzerPanel({
                   key={idx}
                   type="button"
                   onClick={() => toggleBit(idx)}
+                  aria-pressed={isFlipped}
+                  aria-label={`Codeword bit ${idx}: original ${origBit}${isFlipped ? ', flipped' : ''}${isDropped ? ', deleted' : ''}`}
                   title={`bit[${idx}]: ${origBit}${isFlipped ? ' (flipped)' : ''}${isDropped ? ' (deleted)' : ''}`}
                   className={cn(
-                    'h-4 w-2.5 rounded-[2px] font-mono text-[9px] font-bold transition-colors',
+                    'h-5 w-3 rounded-[2px] font-mono text-[11px] font-bold transition-colors',
                     isDropped
                       ? 'bg-red-500 text-white'
                       : isFlipped
                         ? 'bg-amber-400 text-slate-950 ring-1 ring-amber-200'
                         : origBit === 1
-                          ? 'bg-emerald-500/80 text-slate-950 hover:bg-emerald-400'
-                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600',
+                          ? 'bg-emerald-500/85 text-slate-950 hover:bg-emerald-400'
+                          : 'bg-surface-elevated text-ink-secondary hover:bg-slate-600',
                   )}
                 >
                   {isDropped ? '-' : (origBit ^ (isFlipped ? 1 : 0))}
                 </button>
               )
             })}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 pt-1 font-mono text-xs text-ink-muted">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-xs bg-emerald-500/85" aria-hidden="true" /> Original 1
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-xs bg-surface-elevated ring-1 ring-border-strong" aria-hidden="true" /> Original 0
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-xs bg-amber-400" aria-hidden="true" /> Flipped Bit
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-xs bg-red-500" aria-hidden="true" /> Deleted Frameshift (-)
+            </span>
           </div>
         </div>
       )}

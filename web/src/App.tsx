@@ -259,11 +259,26 @@ export function App() {
 
   const runtimeLabel =
     runtimeMode === 'api' && apiEngine
-      ? `Local API · ${apiEngine.backend} (${apiEngine.threads}T)`
-      : 'Browser · Rust WASM + TS N-Gram'
+      ? `Local API / ${apiEngine.backend} (${apiEngine.threads}T)`
+      : 'Browser / Rust WASM + TS N-Gram'
+
+  const constructionLabel = config.construction === 'linear' ? 'Linear GF(2)' : 'RNG Codebook'
+  const methodLabel =
+    config.method === 'levenshtein'
+      ? 'Levenshtein'
+      : config.method === 'hamming'
+        ? 'Hamming'
+        : 'BCH ECC'
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#0F172A] text-slate-100">
+    <div className="flex min-h-dvh flex-col overflow-x-hidden bg-canvas text-ink">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950"
+      >
+        Skip to studio workspace
+      </a>
+
       <HeaderBar
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -285,68 +300,97 @@ export function App() {
           onChangeWatermark={setWatermark}
           previewCodeword={previewCodeword}
           isOpen={sidebarOpen}
+          onCloseMobile={() => setSidebarOpen(false)}
         />
 
-        <main className="min-w-0 flex-1 p-4 sm:p-6">
-          {activeTab === 'playground' && (
-            <PlaygroundView
-              config={config}
-              watermark={watermark}
-              runtimeLabel={runtimeLabel}
-              wasmReady={wasm !== null || (runtimeMode === 'api' && apiEngine !== null)}
-              busy={busy}
-              errorMessage={errorMessage}
-              prompt={prompt}
-              onChangePrompt={setPrompt}
-              embedResult={embedResult}
-              attackMeta={attackMeta}
-              attackBudget={attackBudget}
-              onChangeAttackBudget={setAttackBudget}
-              attackSeed={attackSeed}
-              onChangeAttackSeed={setAttackSeed}
-              suspectText={suspectText}
-              extractResult={extractResult}
-              decoderComparison={decoderComparison}
-              onEmbed={handleEmbed}
-              onAttack={handleAttack}
-              onResetText={handleResetText}
-              onChangeSuspectText={handleChangeSuspectText}
-              onExtractNow={handleExtractNow}
-            />
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 p-4 focus:outline-none sm:p-6">
+          {!sidebarOpen && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs lg:hidden">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-ink-secondary tabular-nums">
+                <span>ID {watermark}</span>
+                <span>n={config.n}</span>
+                <span>u={config.u}</span>
+                <span>{constructionLabel}</span>
+                <span className="text-accent-ink">{methodLabel}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(true)}
+                className="min-h-7 rounded border border-border-strong bg-surface-elevated px-2.5 py-1 font-medium text-ink transition-colors hover:border-emerald-500/60"
+              >
+                Edit Parameters
+              </button>
+            </div>
           )}
 
-          {activeTab === 'benchmarks' && (
-            <BenchmarksView
-              benchmarks={benchmarks}
-              apiConnected={apiEngine !== null}
-              onRefreshFromApi={handleRefreshBenchmarks}
-              refreshing={refreshingBench}
-            />
-          )}
+          <div
+            id={`panel-${activeTab}`}
+            role="tabpanel"
+            aria-labelledby={`tab-${activeTab}`}
+          >
+            {activeTab === 'playground' && (
+              <PlaygroundView
+                config={config}
+                watermark={watermark}
+                runtimeLabel={runtimeLabel}
+                wasmReady={wasm !== null || (runtimeMode === 'api' && apiEngine !== null)}
+                busy={busy}
+                errorMessage={errorMessage}
+                prompt={prompt}
+                onChangePrompt={setPrompt}
+                embedResult={embedResult}
+                attackMeta={attackMeta}
+                attackBudget={attackBudget}
+                onChangeAttackBudget={setAttackBudget}
+                attackSeed={attackSeed}
+                onChangeAttackSeed={setAttackSeed}
+                suspectText={suspectText}
+                extractResult={extractResult}
+                decoderComparison={decoderComparison}
+                onEmbed={handleEmbed}
+                onAttack={handleAttack}
+                onResetText={handleResetText}
+                onChangeSuspectText={handleChangeSuspectText}
+                onExtractNow={handleExtractNow}
+              />
+            )}
 
-          {activeTab === 'inspector' && (
-            <InspectorView
-              config={config}
-              watermark={watermark}
-              info={codebookInfo}
-              wasm={wasm}
-            />
-          )}
+            {activeTab === 'benchmarks' && (
+              <BenchmarksView
+                benchmarks={benchmarks}
+                apiConnected={apiEngine !== null}
+                onRefreshFromApi={handleRefreshBenchmarks}
+                refreshing={refreshingBench}
+              />
+            )}
+
+            {activeTab === 'inspector' && (
+              <InspectorView
+                config={config}
+                watermark={watermark}
+                info={codebookInfo}
+                wasm={wasm}
+              />
+            )}
+          </div>
         </main>
       </div>
 
-      <footer className="border-t border-slate-800 bg-[#0F172A] px-4 py-3 text-center font-mono text-[11px] text-slate-500">
-        Zero-cost client-side Rust WebAssembly implementation of{' '}
+      <footer className="border-t border-border bg-canvas px-4 py-3.5 text-center font-mono text-xs text-ink-muted">
+        Client-side Rust WebAssembly implementation of{' '}
         <a
           href="https://arxiv.org/abs/2611.16890"
           target="_blank"
           rel="noreferrer"
-          className="text-slate-400 underline hover:text-emerald-400"
+          className="text-ink-secondary underline decoration-border-strong underline-offset-4 transition-colors hover:text-accent-ink"
         >
           Janas, Morawiecki &amp; Pieprzyk (2026)
-        </a>{' '}
-        · Run local Python/Rayon backend via{' '}
-        <code className="text-slate-400">uvicorn llmw_codebook.api:app --port 8000</code>
+        </a>
+        <span className="mx-2 text-border-strong" aria-hidden="true">
+          |
+        </span>
+        Local API:{' '}
+        <code className="text-ink-secondary">uvicorn llmw_codebook.api:app --port 8000</code>
       </footer>
     </div>
   )

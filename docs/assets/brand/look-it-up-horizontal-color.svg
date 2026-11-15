@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 256" width="960" height="256" role="img" aria-labelledby="title-hz-c">
+  <title>look it up horizontal color</title>
+  
+  <g id="symbol" transform="translate(20 22) scale(0.88)">
+    <path fill="#0F172A" d="M 28 62 H 54 L 118 126 V 216 H 106 L 28 138 Z"/>
+    <path fill="#0F172A" d="M 228 62 H 202 L 138 126 V 216 H 150 L 228 138 Z"/>
+    <polygon fill="#059669" points="128,24 170,66 128,108 86,66"/>
+  </g>
+  <g id="wordmark" transform="translate(260 -1) scale(1.02)" fill="#0F172A">
+    <path d="M 0 86 H 16 V 156 H 52 V 170 H 0 Z"/>
+    <path fill-rule="evenodd" d="M 108 84 A 40 44 0 0 1 108 172 A 40 44 0 0 1 108 84 Z M 108 98 A 24 30 0 0 0 108 158 A 24 30 0 0 0 108 98 Z"/>
+    <path fill-rule="evenodd" d="M 200 84 A 40 44 0 0 1 200 172 A 40 44 0 0 1 200 84 Z M 200 98 A 24 30 0 0 0 200 158 A 24 30 0 0 0 200 98 Z"/>
+    <path d="M 256 86 H 272 V 126 L 312 86 H 333 L 290 129 L 331 170 H 308 L 272 134 V 170 H 256 Z"/>
+    <path d="M 371 86 H 387 V 170 H 371 Z"/>
+    <path d="M 397 86 H 465 V 100 H 439 V 170 H 423 V 100 H 397 Z"/>
+    <path d="M 505 86 H 521 V 138 A 19 20 0 0 0 559 138 V 86 H 575 V 138 A 35 34 0 0 1 505 138 Z"/>
+    <path fill-rule="evenodd" d="M 593 86 H 631 A 28 26 0 0 1 631 138 H 609 V 170 H 593 Z M 609 100 H 631 A 12 12 0 0 1 631 124 H 609 Z"/>
+  </g>
+</svg>

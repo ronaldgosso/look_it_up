@@ -32,7 +32,8 @@ export function TokenLogitInspector({
   const minLogit = Math.min(...allVals)
   const maxLogit = Math.max(...allVals)
   const span = Math.max(1, maxLogit - minLogit)
-  const toWidthPct = (val: number) => Math.max(8, Math.min(100, ((val - minLogit + span * 0.15) / (span * 1.15)) * 100))
+  const toWidthPct = (val: number) =>
+    Math.max(8, Math.min(100, ((val - minLogit + span * 0.15) / (span * 1.15)) * 100))
 
   const jumpToNext = (predicate: (s: TokenStepTrace) => boolean) => {
     for (let offset = 1; offset <= steps.length; offset++) {
@@ -47,27 +48,25 @@ export function TokenLogitInspector({
   const bitMatched = step.selected_group === step.target_bit
 
   return (
-    <div className="rounded-lg border border-slate-700/80 bg-[#0F172A] p-3.5 space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+    <div className="space-y-3 rounded-lg border border-border bg-surface-inset p-3.5 sm:p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
         <div className="flex items-center gap-2">
-          <Crosshair className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
-          <span className="text-xs font-semibold text-slate-200">
-            Logit-Bias Step Inspector
-          </span>
-          <span className="rounded bg-[#272F42] px-2 py-0.5 font-mono text-[11px] text-slate-300 tabular-nums">
+          <Crosshair className="size-4 text-accent" aria-hidden="true" />
+          <span className="text-xs font-semibold text-ink">Logit-Bias Step Inspector</span>
+          <span className="rounded border border-border bg-surface px-2 py-0.5 font-mono text-xs text-ink-secondary tabular-nums">
             t = {step.step + 1} / {steps.length}
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             disabled={activeIdx <= 0}
             onClick={() => onSelectIdx(activeIdx - 1)}
             aria-label="Previous token step"
-            className="inline-flex items-center gap-1 rounded border border-slate-700 bg-[#1B2336] px-2 py-1 text-[11px] text-slate-300 hover:border-slate-500 disabled:opacity-40"
+            className="inline-flex min-h-8 items-center gap-1 rounded-md border border-border-strong bg-surface px-2.5 py-1 text-xs font-medium text-ink-secondary transition-colors hover:border-ink-muted hover:text-ink disabled:opacity-40"
           >
-            <ArrowLeft className="h-3 w-3" aria-hidden="true" />
+            <ArrowLeft className="size-3.5" aria-hidden="true" />
             <span>Prev</span>
           </button>
           <button
@@ -75,99 +74,96 @@ export function TokenLogitInspector({
             disabled={activeIdx >= steps.length - 1}
             onClick={() => onSelectIdx(activeIdx + 1)}
             aria-label="Next token step"
-            className="inline-flex items-center gap-1 rounded border border-slate-700 bg-[#1B2336] px-2 py-1 text-[11px] text-slate-300 hover:border-slate-500 disabled:opacity-40"
+            className="inline-flex min-h-8 items-center gap-1 rounded-md border border-border-strong bg-surface px-2.5 py-1 text-xs font-medium text-ink-secondary transition-colors hover:border-ink-muted hover:text-ink disabled:opacity-40"
           >
             <span>Next</span>
-            <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            <ArrowRight className="size-3.5" aria-hidden="true" />
           </button>
           <button
             type="button"
             onClick={() => jumpToNext((s) => s.bias_flipped_choice)}
-            className="inline-flex items-center gap-1 rounded border border-emerald-500/35 bg-emerald-500/10 px-2 py-1 text-[11px] font-medium text-emerald-300 hover:bg-emerald-500/20"
+            className="inline-flex min-h-8 items-center gap-1 rounded-md border border-emerald-500/40 bg-emerald-500/12 px-2.5 py-1 text-xs font-medium text-accent-ink transition-colors hover:bg-emerald-500/20"
           >
-            <Flame className="h-3 w-3" aria-hidden="true" />
+            <Flame className="size-3.5" aria-hidden="true" />
             <span>Next Flip</span>
           </button>
           <button
             type="button"
             onClick={() => jumpToNext((s) => s.selected_group !== s.target_bit || s.ti_retries > 0)}
-            className="inline-flex items-center gap-1 rounded border border-amber-500/35 bg-amber-500/10 px-2 py-1 text-[11px] font-medium text-amber-300 hover:bg-amber-500/20"
+            className="inline-flex min-h-8 items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/12 px-2.5 py-1 text-xs font-medium text-warning-ink transition-colors hover:bg-amber-500/20"
           >
-            <GitBranch className="h-3 w-3" aria-hidden="true" />
+            <GitBranch className="size-3.5" aria-hidden="true" />
             <span>Next Mismatch/TI</span>
           </button>
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        {/* Competition Race Bars */}
-        <div className="space-y-2.5 rounded-md border border-slate-800 bg-[#1B2336]/55 p-3">
-          <div className="flex items-center justify-between text-[11px] text-slate-400">
-            <span>
-              V1 vs V0 Peak Candidate Race {delta > 0 ? `(+${delta.toFixed(1)} to V${step.target_bit})` : ''}
+      <div className="grid gap-3 lg:grid-cols-12">
+        <div className="space-y-3 rounded-md border border-border bg-surface/80 p-3 lg:col-span-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span className="text-ink-secondary">
+              V1 vs V0 Candidate Race {delta > 0 ? `(+${delta.toFixed(1)} to V${step.target_bit})` : ''}
             </span>
             <span
               className={cn(
-                'rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold',
+                'rounded px-2 py-0.5 font-mono text-xs font-semibold',
                 !bitMatched
-                  ? 'bg-red-500/15 text-red-300'
+                  ? 'bg-red-500/15 text-danger-ink'
                   : step.bias_flipped_choice
-                    ? 'bg-emerald-500/20 text-emerald-300'
-                    : 'bg-slate-700/70 text-slate-300',
+                    ? 'bg-emerald-500/20 text-accent-ink'
+                    : 'bg-surface-elevated text-ink-secondary',
               )}
             >
               {!bitMatched
-                ? 'MARGIN OVERRIDE'
+                ? 'Margin Override'
                 : step.bias_flipped_choice
                   ? 'BIAS FLIPPED'
-                  : 'NATURALLY ALIGNED'}
+                  : 'Naturally Aligned'}
             </span>
           </div>
 
           {hasRichLogits ? (
-            <div className="space-y-2 font-mono text-xs tabular-nums">
-              {/* V1 bar */}
+            <div className="space-y-2.5 font-mono text-xs tabular-nums">
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-emerald-300">
-                    V1 peak: <strong className="text-white">{JSON.stringify(step.top_v1_token)}</strong>
+                <div className="flex items-center justify-between">
+                  <span className="text-accent-ink">
+                    V1 peak: <span className="font-semibold text-ink">{JSON.stringify(step.top_v1_token)}</span>
                   </span>
-                  <span className="text-slate-300">
+                  <span className="text-ink-secondary">
                     {rawV1.toFixed(2)}
                     {step.target_bit === 1 && (
-                      <span className="text-emerald-400"> -&gt; {postV1.toFixed(2)}</span>
+                      <span className="text-accent-ink"> to {postV1.toFixed(2)}</span>
                     )}
                   </span>
                 </div>
-                <div className="h-2.5 w-full overflow-hidden rounded bg-[#0F172A]">
+                <div className="h-2.5 w-full overflow-hidden rounded bg-surface-inset">
                   <div
                     className={cn(
-                      'h-full rounded transition-all',
-                      step.target_bit === 1 ? 'bg-emerald-500' : 'bg-emerald-500/50',
+                      'h-full rounded transition-opacity',
+                      step.target_bit === 1 ? 'bg-emerald-500' : 'bg-emerald-500/45',
                     )}
                     style={{ width: `${toWidthPct(postV1)}%` }}
                   />
                 </div>
               </div>
 
-              {/* V0 bar */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-red-300">
-                    V0 peak: <strong className="text-white">{JSON.stringify(step.top_v0_token)}</strong>
+                <div className="flex items-center justify-between">
+                  <span className="text-danger-ink">
+                    V0 peak: <span className="font-semibold text-ink">{JSON.stringify(step.top_v0_token)}</span>
                   </span>
-                  <span className="text-slate-300">
+                  <span className="text-ink-secondary">
                     {rawV0.toFixed(2)}
                     {step.target_bit === 0 && (
-                      <span className="text-red-400"> -&gt; {postV0.toFixed(2)}</span>
+                      <span className="text-danger-ink"> to {postV0.toFixed(2)}</span>
                     )}
                   </span>
                 </div>
-                <div className="h-2.5 w-full overflow-hidden rounded bg-[#0F172A]">
+                <div className="h-2.5 w-full overflow-hidden rounded bg-surface-inset">
                   <div
                     className={cn(
-                      'h-full rounded transition-all',
-                      step.target_bit === 0 ? 'bg-red-500' : 'bg-red-500/50',
+                      'h-full rounded transition-opacity',
+                      step.target_bit === 0 ? 'bg-red-500' : 'bg-red-500/45',
                     )}
                     style={{ width: `${toWidthPct(postV0)}%` }}
                   />
@@ -175,58 +171,57 @@ export function TokenLogitInspector({
               </div>
             </div>
           ) : (
-            <div className="py-2 font-mono text-xs text-slate-400">
-              Detailed candidate logit pairs appear when generated via WASM Browser mode; current step pre-bias margin ={' '}
-              <strong className="text-slate-200">{step.pre_bias_margin.toFixed(3)}</strong>.
-            </div>
+            <p className="py-2 font-mono text-xs text-ink-muted">
+              Detailed candidate logit pairs appear in WASM Browser mode. Current pre-bias margin:{' '}
+              <span className="font-semibold text-ink">{step.pre_bias_margin.toFixed(3)}</span>
+            </p>
           )}
         </div>
 
-        {/* Step Telemetry */}
-        <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
-          <div className="rounded border border-slate-800 bg-[#1B2336]/55 p-2.5">
-            <div className="text-[10px] text-slate-400 uppercase">Selected Token</div>
-            <div className="mt-1 truncate text-sm font-semibold text-white">
+        <dl className="grid grid-cols-2 divide-x divide-y divide-border overflow-hidden rounded-md border border-border bg-surface/80 font-mono text-xs tabular-nums lg:col-span-6">
+          <div className="p-3">
+            <dt className="font-sans text-xs text-ink-muted">Selected Token</dt>
+            <dd className="mt-1 truncate text-sm font-semibold text-ink">
               {JSON.stringify(step.token_text)}
-            </div>
-            <div className="text-[10px] text-slate-500">id #{step.token_id}</div>
+            </dd>
+            <dd className="mt-0.5 text-xs text-ink-muted">id #{step.token_id}</dd>
           </div>
 
-          <div className="rounded border border-slate-800 bg-[#1B2336]/55 p-2.5">
-            <div className="text-[10px] text-slate-400 uppercase">Codeword Target vs Pick</div>
-            <div className="mt-1 text-sm font-semibold">
-              <span className="text-emerald-300">b[{step.step}] = {step.target_bit}</span>
-              <span className="mx-1.5 text-slate-600">/</span>
-              <span className={step.selected_group === 1 ? 'text-emerald-300' : 'text-red-300'}>
+          <div className="p-3">
+            <dt className="font-sans text-xs text-ink-muted">Codeword Target vs Pick</dt>
+            <dd className="mt-1 text-sm font-semibold">
+              <span className="text-accent-ink">b[{step.step}] = {step.target_bit}</span>
+              <span className="mx-1.5 text-ink-muted">/</span>
+              <span className={step.selected_group === 1 ? 'text-accent-ink' : 'text-danger-ink'}>
                 V{step.selected_group}
               </span>
-            </div>
-            <div className="text-[10px] text-slate-500">
+            </dd>
+            <dd className="mt-0.5 text-xs text-ink-muted">
               margin = {step.pre_bias_margin.toFixed(3)}
-            </div>
+            </dd>
           </div>
 
-          <div className="rounded border border-slate-800 bg-[#1B2336]/55 p-2.5">
-            <div className="text-[10px] text-slate-400 uppercase">SHA-256 Vocab Partition</div>
-            <div className="mt-1 text-xs font-semibold text-slate-200">
+          <div className="p-3">
+            <dt className="font-sans text-xs text-ink-muted">SHA-256 Partition</dt>
+            <dd className="mt-1 text-xs font-semibold text-ink">
               {step.v1_fraction !== undefined
                 ? `${(step.v1_fraction * 100).toFixed(1)}% V1`
                 : 'Balanced 50.0%'}
-            </div>
-            <div className="text-[10px] text-slate-500">seeded by (key, prev_tok)</div>
+            </dd>
+            <dd className="mt-0.5 text-xs text-ink-muted">key || prev_token</dd>
           </div>
 
-          <div className="rounded border border-slate-800 bg-[#1B2336]/55 p-2.5">
-            <div className="flex items-center gap-1 text-[10px] text-slate-400 uppercase">
-              <ShieldCheck className="h-3 w-3 text-emerald-400" aria-hidden="true" />
+          <div className="p-3">
+            <dt className="flex items-center gap-1 font-sans text-xs text-ink-muted">
+              <ShieldCheck className="size-3.5 text-accent" aria-hidden="true" />
               <span>TI Merge Check</span>
-            </div>
-            <div className="mt-1 text-xs font-semibold text-slate-200">
+            </dt>
+            <dd className="mt-1 text-xs font-semibold text-ink">
               {step.ti_retries} {step.ti_retries === 1 ? 'retry' : 'retries'}
-            </div>
-            <div className="text-[10px] text-slate-500">Appendix F roundtrip</div>
+            </dd>
+            <dd className="mt-0.5 text-xs text-ink-muted">Appendix F roundtrip</dd>
           </div>
-        </div>
+        </dl>
       </div>
     </div>
   )

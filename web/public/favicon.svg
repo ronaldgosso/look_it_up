@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title-app">
+  <title id="title-app">Look It Up Studio app icon</title>
+  <rect width="256" height="256" rx="56" fill="#0F172A"/>
+  <g transform="translate(26 28) scale(0.8)">
+    <path fill="#F8FAFC" d="M 24 62 H 50 L 115 127 V 216 H 102 L 24 138 Z"/>
+    <path fill="#F8FAFC" d="M 232 62 H 206 L 141 127 V 216 H 154 L 232 138 Z"/>
+    <polygon fill="#22C55E" points="128,20 172,64 128,108 84,64"/>
+  </g>
+</svg>

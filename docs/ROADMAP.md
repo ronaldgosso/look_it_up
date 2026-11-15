@@ -1,6 +1,6 @@
 # Engineering Roadmap
 
-Five build phases took this project from the paper equations in arXiv:2611.16890 to a compiled Rust, WebAssembly, and Python workspace. A sixth pass added the Dev.to walkthrough, live browser screenshots, and layout fixes.
+Five build phases took this project from the paper equations in arXiv:2611.16890 to a compiled Rust, WebAssembly, and Python workspace. Later passes added the Dev.to walkthrough with live browser screenshots, restructured repository documentation, and the Codex Aperture visual identity.
 
 | Phase | Scope Delivered | Status |
 | --- | --- | --- |
@@ -10,3 +10,5 @@ Five build phases took this project from the paper equations in arXiv:2611.16890
 | Phase 4 | Token-level `V0`/`V1` logit-bias stepper (`TokenLogitInspector`), dual-decoder frameshift vs. edit-alignment diff (`AlignmentFrameshiftPanel`), Linear vs. RNG Hamming distance spectrum charts (`DistanceSpectrumChart`), and interactive BCH bounds and Berlekamp-Massey sandbox (`BchAnalyzerPanel`). | Merged in PR #4 |
 | Phase 5 | GitHub Actions CI across Cargo, pytest, and Vitest (`.github/workflows/ci.yml`), automated GitHub Pages deployment (`.github/workflows/pages.yml`), updated `README.md`, and portfolio showcase material in `docs/PORTFOLIO_SHOWCASE.md`. | Merged in PR #5 |
 | Dev.to Kit | Interactive Dev.to article (`docs/devto_article.md`), 1000x420 banner and five Studio screenshots (`docs/assets/devto/`), flex overflow fix in `web/src/App.tsx`, and SVG label offset fix in `web/src/components/BchAnalyzerPanel.tsx`. | Open in PR #6 |
+| Docs Pass | Rewrote all Markdown documentation across the repository for plain technical style with verified command and metric claims. | Open in PR #7 |
+| Brand Identity | Codex Aperture vector brand system (`docs/assets/brand/`) with 18 master SVGs, geometric `LOOK IT UP` wordmarks, `brand-guidelines.md`, mockup showcase sheet, `web/public/` favicon and PWA icons, inline `HeaderBar.tsx` mark, branded Dev.to banner, and updated Studio screenshots. | Open in PR #8 |
