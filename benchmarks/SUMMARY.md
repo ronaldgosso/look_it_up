@@ -1,9 +1,8 @@
 # Phase 2 Benchmark Summary
 
-- **Active Acceleration:** `rust-native` (threads: `8`)
-- **Benchmark Config:** `n=12`, `u=127`, `delta=6.0`, `attack_budget=0.1`, `samples=16`
+Measured on `rust-native` across 8 threads with `n=12`, `u=127`, `delta=6.0`, `attack_budget=0.1`, and 16 samples per condition.
 
-## 1. Python/NumPy vs. Multi-Threaded Rust Speed (`n=15` -> 32,768 codewords, `u=127`)
+## 1. Python/NumPy vs. Multi-Threaded Rust Speed at `n=15` (32,768 codewords, `u=127`)
 
 | Metric | Python/NumPy (ms) | Rust Native (ms) | Speedup |
 | --- | ---: | ---: | ---: |
@@ -14,17 +13,17 @@
 
 | Method | Clean | Word Deletion | Word Insertion | Synonym Swap | Paraphrase |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| **levenshtein** | 100.0% | 100.0% | 56.2% | 100.0% | 100.0% |
-| **hamming** | 100.0% | 0.0% | 0.0% | 18.8% | 12.5% |
-| **bch** | 100.0% | 0.0% | 0.0% | 0.0% | 0.0% |
+| levenshtein | 100.0% | 100.0% | 56.2% | 100.0% | 100.0% |
+| hamming | 100.0% | 0.0% | 0.0% | 18.8% | 12.5% |
+| bch | 100.0% | 0.0% | 0.0% | 0.0% | 0.0% |
 
-## 3. ROC / AUROC & Entropy Regimes
+## 3. ROC, AUROC, and Entropy Regimes
 
-| Method | AUROC | TPR @ 1% FPR | Base Match | Instruct Match |
+| Method | AUROC | TPR at 1% FPR | Base Match | Instruct Match |
 | --- | ---: | ---: | ---: | ---: |
-| **levenshtein** | 1.0000 | 100.0% | 100.0% | 37.5% |
-| **hamming** | 1.0000 | 100.0% | 100.0% | 100.0% |
-| **bch** | 1.0000 | 100.0% | 100.0% | 25.0% |
+| levenshtein | 1.0000 | 100.0% | 100.0% | 37.5% |
+| hamming | 1.0000 | 100.0% | 100.0% | 100.0% |
+| bch | 1.0000 | 100.0% | 100.0% | 25.0% |
 
 ## 4. Text Quality (Appendix G)
 

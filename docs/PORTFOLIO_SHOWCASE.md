@@ -1,103 +1,91 @@
-# Portfolio & LinkedIn Showcase Kit
+# Portfolio and Showcase Kit
 
-This guide packages the verified engineering outcomes, resume bullets, interview talking points, live demo script, and ready-to-publish LinkedIn posts for **Look It Up: Multi-bit LLM Watermarking via Codebook Search** ([arXiv:2611.16890](https://arxiv.org/abs/2611.16890)).
+Deployment steps, resume copy, LinkedIn drafts, a 45-second walkthrough script, interview answers, and Dev.to publishing instructions for "Look It Up: Multi-bit LLM Watermarking via Codebook Search" ([arXiv:2611.16890](https://arxiv.org/abs/2611.16890)).
 
----
+## GitHub Pages Activation
 
-## 1. One-Time GitHub Pages Activation ($0 Static Hosting)
+Static deployment runs automatically from [the Pages workflow](../.github/workflows/pages.yml) whenever `main` changes. Merge PR #6 (and PR #7 if syncing documentation) into `main`, then open repository Settings on GitHub and click Pages. Under Build and deployment Source, pick GitHub Actions, run Deploy Web Studio to GitHub Pages once from the Actions tab, and wait for the site to publish at `https://ronaldgosso.github.io/look_it_up/`.
 
-The deployment workflow in [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) compiles `llmw_wasm.wasm`, runs Vitest + TypeScript/Vite builds, and publishes `web/dist` automatically whenever `main` updates:
+## Resume Project Copy
 
-1. Merge PR #4 and PR #5 into `main`.
-2. In the GitHub repository, open **Settings -> Pages**.
-3. Under **Build and deployment -> Source**, select **GitHub Actions**.
-4. Trigger **Deploy Web Studio to GitHub Pages** manually under the **Actions** tab (or push to `main`).
-5. Your interactive Studio goes live at: `https://ronaldgosso.github.io/look_it_up/`.
+Built a zero-dependency Rust cryptography and error-correction core (`llmw-core`) implementing FIPS 180-4 SHA-256, SplitMix64, affine GF(2) and RNG codebooks, 256-bit Myers bit-parallel Levenshtein distance (`u128` plus `[u64; 4]`), and shortened GF(2^m) BCH decoding, compiled to multi-threaded C-ABI FFI for Python (`ctypes`) and a `64.0 KB` (`64,001`-byte) WebAssembly binary.
 
----
+Cut Levenshtein codebook extraction latency by `55.94x` against Python/NumPy across 32,768 codewords (`756.14 ms` down to `13.52 ms` on 8 threads), and scaled multi-threaded native lookup to 1,048,576 codewords (`n=20`, `u=127`) in `3.73 ms` (Hamming), `609.09 ms` (Levenshtein), and `0.096 ms` (BCH) via `llmw-bench`.
 
-## 2. Resume / CV Bullet Points
+Shipped an offline React, TypeScript, and WebAssembly browser studio at zero hosting cost with a step-by-step `V0`/`V1` logit-bias inspector, live Appendix B attack suite (word deletion, insertion, synonym swap, paraphrase), two-track edit-alignment diffs, codebook distance spectrum histograms, and BCH capacity curves.
 
-- **Built a zero-dependency Rust cryptography & coding-theory core (`llmw-core`)** implementing FIPS 180-4 SHA-256, SplitMix64, affine linear $\mathrm{GF}(2)$ / RNG codebooks, 256-bit Myers bit-parallel Levenshtein distance (`u128` + `[u64; 4]`), and shortened $\mathrm{GF}(2^m)$ BCH error correction; compiled to both multi-threaded C-ABI native (`ctypes`) and `64.0 KB` WebAssembly (`wasm32-unknown-unknown`).
-- **Achieved a `55.94x` Levenshtein codebook search speedup** (`756.1 ms` Python $\to$ `13.5 ms` multi-threaded Rust across 32,768 codewords) and scaled native search to **1,048,576 codewords ($n=20$ bits)** in `2.55 ms` (Hamming), `358.85 ms` (Levenshtein), and `0.027 ms` (BCH).
-- **Engineered an interactive React + TypeScript + WASM research studio** running 100% client-side with $0 hosting cost, featuring a token-level $V_0/V_1$ logit-bias stepper, live Appendix B attack simulator (`Word Deletion`, `Insertion`, `Synonym Swap`, `Paraphrase`), two-track edit-alignment frameshift visualizer, and SVG distance-spectrum & BCH capacity curves.
+## LinkedIn Posts
 
----
+### Version A: Technical Walkthrough
 
-## 3. Ready-to-Post LinkedIn Showcase Copy
+Most multi-bit LLM watermarks break down on short 127-token outputs. Position-allocation schemes decode in microseconds, then fall apart completely as soon as someone deletes a single word and shifts every bit index downstream. Exhaustive codebook lookup survives deletions via edit distance, but pure Python search loops stall as soon as payloads grow beyond a tiny ID table.
 
-### Version A — Engineering Storytelling Post (Recommended)
+I implemented "Look It Up: Multi-bit LLM Watermarking via Codebook Search" (arXiv:2611.16890) from scratch in Rust, WebAssembly, and Python. All math lives in one zero-dependency Rust crate (`llmw-core`) covering SHA-256 keying, balanced `V0`/`V1` vocabulary splits, bit-packed codebooks, 256-bit Myers bit-parallel Levenshtein distance, and shortened GF(2^m) BCH decoding.
 
-> Most AI text watermarks force a painful tradeoff on short generations (~127 tokens):
-> - Fast position-allocation watermarks shatter the moment someone deletes a single word (positional frameshift).
-> - Exhaustive codebook search survives deletions via edit distance — but pure Python loops stall once payload capacity scales.
->
-> I implemented **"Look It Up: Multi-bit LLM Watermarking via Codebook Search" (arXiv:2611.16890)** as an open-source **Rust + WebAssembly + Python** system — including a 100% client-side interactive lab that runs directly in your browser at **$0 server cost**.
->
-> **How it works under the hood:**
-> - **Pure Rust core (`llmw-core`)**: 256-bit bit-parallel Myers Levenshtein DP (`u128` fast path), `popcnt` Hamming search across bit-packed codebooks, and algebraic $\mathrm{GF}(2^m)$ shortened BCH decoding (Berlekamp–Massey + Chien search).
-> - **Dual compile targets**: Compiles once to multi-threaded native FFI for Python (`55.94x` faster Levenshtein search vs. Python, scaling to 1,048,576 codewords in 359 ms) AND to a **64 KB `.wasm` module** running inside the browser.
-> - **Why Levenshtein beats Hamming & BCH under deletion**: Under a 10% word-deletion attack, Hamming & BCH drop to **0.0%** recovery due to index frameshift — while Myers Levenshtein re-synchronizes gaps and maintains **100.0%** recovery in benchmark evaluations.
->
-> **Inside the interactive Web Studio:**
-> 1. Scrub token-by-token through $V_0 / V_1$ logit biasing ($+\delta$) and Appendix F Tokenization-Invariance checks.
-> 2. Inject deletion/insertion/paraphrase attacks (5%–30% token budget) and compare Hamming frameshift failure vs. Levenshtein alignment live.
-> 3. Explore Linear $\mathrm{GF}(2)$ **zero-spread invariance** vs. RNG codebooks and interactive BCH syndrome decoding.
->
-> Repo: https://github.com/ronaldgosso/look_it_up  
-> Live WASM Studio: https://ronaldgosso.github.io/look_it_up/  
-> Paper: https://arxiv.org/abs/2611.16890
->
-> #Rust #WebAssembly #AppliedCryptography #LLM #AISecurity #OpenSource #Python
+Compiling the same crate twice gave me both ends at once. Multi-threaded native FFI gives Python a `55.94x` speedup on Levenshtein lookup (13.52 ms vs. 756.14 ms for 32,768 codewords) and searches 1,048,576 codewords in 609 ms (`llmw-bench`). Compiling to `wasm32-unknown-unknown` drops into GitHub Pages as a 64 KB binary so anyone can run attacks in the browser for $0 server cost.
 
-### Version B — Short Portfolio Highlight Post
+The sharpest contrast sits in the Appendix B 10% word-deletion benchmark (`n=12`, `u=127`). Hamming drops to 0.0% recovery and BCH drops to 0.0% recovery because fixed positional indexing loses sync after the first deleted token. Myers Levenshtein realigns the gaps and hits 100.0% recovery.
 
-> Shipped my full-stack **Rust + WASM + Python** implementation & browser visualizer for **Codebook LLM Watermarking (arXiv:2611.16890)**!
->
-> - Zero-dep Rust core $\to$ Multi-threaded Python FFI (**55.94x** speedup on Myers bit-parallel Levenshtein) & **64 KB WebAssembly**
-> - Full **Appendix B** adversarial attack suite + **Appendix F** Tokenization-Invariance protection + **Table V** shortened $\mathrm{GF}(2^m)$ BCH codec
-> - Runs 100% client-side on static GitHub Pages ($0 backend cost) with optional local FastAPI + HuggingFace LLM bridge
->
-> Explore the code & live Studio: https://github.com/ronaldgosso/look_it_up  
-> Demo: https://ronaldgosso.github.io/look_it_up/
->
-> #SystemsEngineering #RustLang #WASM #MachineLearning #Portfolio
+Inside the static Studio you can scrub token-by-token through `+delta` logit flips and Appendix F tokenization-invariance retries, trigger 5% to 30% adversarial edits while watching Levenshtein insert gap slots against Hamming failures, and inspect why linear affine GF(2) codebooks eliminate weak outlier pairs compared to hashed RNG tables.
 
----
+Repo: https://github.com/ronaldgosso/look_it_up
+Live Studio: https://ronaldgosso.github.io/look_it_up/
+Paper: https://arxiv.org/abs/2611.16890
 
-## 4. 45-Second Demo Video / GIF Script (For LinkedIn Upload)
+#Rust #WebAssembly #AppliedCryptography #LLM #AISecurity #OpenSource #Python
 
-1. **0:00–0:10 (Playground Embed):** Click **Embed & Generate** with default `n=12, u=127, Linear GF(2), Levenshtein`. Show the $V_1/V_0$ token ribbon turning green/red and step through **Logit-Bias Step Inspector** with `Next Flip`.
-2. **0:10–0:25 (Frameshift Showdown):** Click **Word Deletion (10%)**. Highlight the side-by-side verdict: **Hamming fails with `WRONG (...)`** due to frameshift while **Levenshtein shows `FRAMESHIFT RECOVERED`** and trace the cyan `+` alignment gaps in the Two-Track Edit Alignment ribbon.
-3. **0:25–0:35 (Benchmarks Tab):** Switch to **Benchmarks** to show `55.94x` Rust speedup bars and the Appendix B attack matrix.
-4. **0:35–0:45 (Codebook Inspector Tab):** Switch to **Codebook Inspector**, pan across the Linear **ZERO SPREAD** vs. RNG distance spectrum histogram, and click `Max Guarantee: Inject t Flips` in the BCH sandbox to show Berlekamp–Massey instant correction vs. `Inject 1 Deletion Frameshift`.
+### Version B: Short Post
 
----
+Finished an open-source Rust, WebAssembly, and Python implementation of Codebook LLM Watermarking (arXiv:2611.16890) with a browser lab hosted purely on GitHub Pages. A single zero-dependency Rust crate handles multi-threaded Python acceleration (`55.94x` speedup on 256-bit Myers bit-parallel Levenshtein), Appendix B robustness evaluation, Appendix F tokenization-invariance checks, shortened GF(2^m) BCH decoding, and a 64 KB `.wasm` build for live in-browser frameshift inspection.
 
-## 5. Engineering Interview Talking Points
+Code: https://github.com/ronaldgosso/look_it_up
+Demo: https://ronaldgosso.github.io/look_it_up/
 
-1. **Why Myers Bit-Parallel Levenshtein in Rust?**
-   Classical Wagner–Fischer DP is $O(u^2)$ per codeword. Bit-packing codewords into `[u64; 4]` / `u128` words reduces each row transition to constant bitwise additions/XORs, yielding exact Levenshtein distance (`55.94x` faster than Python in parallel `n=15` benchmarks) plus triangle-inequality weight pruning.
-2. **Why Linear Affine $\mathrm{GF}(2)$ over Naive RNG Codebooks?**
-   Linear affine codes ($W \cdot G \oplus r$) guarantee **zero nearest-neighbor spread** across codewords ($\min_{j \neq i} d_H(c_i, c_j) = d_{\min}$ identically for every ID $i$), eliminating weak outlier codewords common in unstructured random codebooks.
-3. **Tokenization Invariance (Appendix F):**
-   Decoding re-tokenizes generated UTF-8 text. If token `t` merges with `t-1` when decoded back to IDs, the verifier computes the wrong `prev_token` seed and loses synchronization. Retrying sub-optimal biased candidates when `encode(decode(tokens)) != tokens` preserves bit alignment across the channel.
-4. **Shortened $\mathrm{GF}(2^m)$ BCH vs. Exhaustive Codebook Search:**
-   Algebraic BCH decoding scales to huge payload spaces (e.g., $n=24$ or $32$ bits in `0.027 ms`) and guarantees fixing up to $t$ bit flips, whereas exhaustive Levenshtein handles token deletions/insertions at the cost of $O(2^n)$ lookup — both are exposed cleanly in the same unified interface.
-5. **Dual-Target Architecture (`llmw-core`):**
-   Isolating zero-dependency Rust math into `llmw-core` allowed identical bit-exact verification across three environments: Python unit tests (`pytest` via `ctypes`), native multi-threaded CLI benchmarks (`llmw-bench`), and a zero-server WebAssembly browser frontend (`llmw_wasm.wasm`).
+#SystemsEngineering #RustLang #WASM #MachineLearning #Portfolio
 
----
+## 45-Second Demo Script
 
-## 6. Dev.to Interactive Article (`docs/devto_article.md`)
+Start at 0:00 to 0:10 in Playground with `n=12`, `u=127`, Linear GF(2), and Levenshtein selected. Click Embed & Generate so the colored `V1`/`V0` token stream fills in, then advance Logit-Bias Step Inspector with Next Flip to show candidate token competition.
 
-A complete, formatted interactive post with spoilers (`{% details %}`), repository embed (`{% github %}`), cover art, and 5 real Studio UI screenshots lives at [`docs/devto_article.md`](devto_article.md) with all PNGs in [`docs/assets/devto/`](assets/devto/):
+From 0:10 to 0:25, trigger Word Deletion (10%). Keep both decoder verdicts visible side by side so viewers see Hamming fail on `WRONG (...)` due to frameshift while Levenshtein reports `FRAMESHIFT RECOVERED`, then pan across the cyan `+` gap markers in the Two-Track Edit Alignment ribbon.
 
-- `cover.png` (`1000x420` Dev.to banner)
-- `01-playground-logit-inspector.png` (Stage 1 token stream & `Logit-Bias Step Inspector`)
-- `02-playground-frameshift-recovery.png` (10% Word Deletion -> Hamming/BCH failure vs. Levenshtein alignment recovery)
-- `03-benchmarks-speedup.png` (`55.9x` Rust speedup & Appendix B recovery matrix)
-- `04-codebook-zero-spread.png` (Linear $\mathrm{GF}(2)$ `ZERO SPREAD` vs. RNG histogram)
-- `05-bch-analyzer-sandbox.png` (Shortened BCH capacity curves & interactive `t=27` Berlekamp–Massey sandbox)
+From 0:25 to 0:35, switch to Benchmarks and highlight the `55.94x` Rust speedup bar beside the Appendix B attack matrix.
 
-To publish: open **dev.to/new**, paste the raw Markdown from `docs/devto_article.md`, toggle `published: true`, and either keep the `raw.githubusercontent.com/.../main/...` image URLs (active as soon as merged to `main`) or drag-and-drop the files from `docs/assets/devto/` directly into Dev.to's image uploader.
+From 0:35 to 0:45, open Codebook Inspector. Show ZERO SPREAD on the Linear GF(2) distance histogram against the scattered RNG spread, then click Max Guarantee: Inject t Flips and Inject 1 Deletion Frameshift in the BCH sandbox to contrast instant Berlekamp-Massey correction against syndrome collapse on unaligned deletions.
+
+## Engineering Interview Notes
+
+### Why Myers Bit-Parallel Levenshtein in Rust
+
+Standard Wagner-Fischer edit distance burns `O(u^2)` inner loops per candidate codeword. Packing each codeword into `u128` (`u <= 128`) or four `u64` limbs (`u <= 256`) reduces each Myers step to fixed bitwise shifts, masks, and additions, paired with triangle-inequality popcount pruning (`|wt(c_i) - wt(y)| > best_dist`) so distant candidates drop out before even entering DP. That combination reaches `55.94x` faster parallel execution at `n=15` against Python/NumPy (`13.52 ms` vs. `756.14 ms`).
+
+### Why Linear Affine GF(2) Over Seeded RNG Codebooks
+
+Hashing each ID independently gives random minimum separations, leaving weak outlier pairs where two IDs collide prematurely under moderate token edits. Affine linear codes (`W * G xor r`) over GF(2) force identical weight and distance neighborhoods around every codeword, yielding zero spread across all 4,096 IDs at `n=12, u=127` (`[43..43]` min nearest-neighbor distance vs. `[38..47]` for RNG).
+
+### Why Tokenization Invariance Matters (Appendix F)
+
+Decoding never sees raw token IDs. It sees UTF-8 text and runs the tokenizer again. If committing candidate token `t` causes `encode(decode(tokens))` to merge tokens `t - 1` and `t`, the extractor hashes the wrong previous token and desynchronizes downstream `V0`/`V1` splits. Checking round-trip re-tokenization before accepting a token and falling back to the next highest biased candidate avoids that silent channel drift.
+
+### Shortened GF(2^m) BCH vs. Exhaustive Codebook Lookup
+
+Brute-force search stalls past roughly 20 to 24 payload bits because `2^n` grows exponentially, whereas algebraic Berlekamp-Massey plus Chien search decodes 20-bit payloads in `0.096 ms` and scales straight to 24 or 32 bits (`t` guaranteed bit flips corrected). The catch is alignment. BCH evaluates syndromes over fixed finite-field exponents, so one unaligned word deletion scrambles every bit index downstream unless an edit-distance layer or exhaustive codebook absorbs the gap.
+
+### Keeping `llmw-core` Free of External Dependencies
+
+Quarantining all hashing, PRNG, codebook math, Myers bit-parallel DP, and BCH finite-field arithmetic inside zero-dependency `llmw-core` lets Cargo emit identical machine semantics across three hosts: multi-threaded `llmw-native` loaded over `ctypes` in pytest, the standalone `llmw-bench` CLI, and the `64,001`-byte `llmw_wasm.wasm` binary shipped in GitHub Pages.
+
+## Dev.to Article and Screenshots
+
+The draft post lives at [devto_article.md](devto_article.md) alongside its `1000x420` banner and five screenshots captured from the compiled WASM Studio in [assets/devto/](assets/devto/).
+
+| File | Subject |
+| --- | --- |
+| `cover.png` | `1000x420` Dev.to banner image |
+| `01-playground-logit-inspector.png` | Playground token stream and Logit-Bias Step Inspector |
+| `02-playground-frameshift-recovery.png` | 10% word deletion failure in Hamming and BCH vs. Levenshtein alignment recovery |
+| `03-benchmarks-speedup.png` | `55.9x` Rust speedup bars and Appendix B recovery table |
+| `04-codebook-zero-spread.png` | Linear GF(2) zero spread (`[43..43]`) vs. RNG histogram |
+| `05-bch-analyzer-sandbox.png` | Shortened BCH error curves and `t=27` Berlekamp-Massey sandbox |
+
+Before publishing on Dev.to, merge PR #6 (and PR #7 if updating docs) into `main` so the `raw.githubusercontent.com/.../main/...` image links resolve. Paste the contents of [devto_article.md](devto_article.md) into `dev.to/new`, inspect the draft preview, change `published: false` to `published: true` in the front matter, and hit Publish.

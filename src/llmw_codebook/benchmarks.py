@@ -279,12 +279,11 @@ def render_markdown_summary(results: dict[str, Any]) -> str:
     lines = [
         "# Phase 2 Benchmark Summary",
         "",
-        f"- **Active Acceleration:** `{results['system']['backend']}` "
-        f"(threads: `{results['system']['threads']}`)",
-        f"- **Benchmark Config:** `n={cfg['n']}`, `u={cfg['u']}`, `delta={cfg['delta']}`, "
-        f"`attack_budget={cfg['attack_budget']}`, `samples={cfg['num_samples']}`",
+        f"Measured on `{results['system']['backend']}` across {results['system']['threads']} threads "
+        f"with `n={cfg['n']}`, `u={cfg['u']}`, `delta={cfg['delta']}`, "
+        f"`attack_budget={cfg['attack_budget']}`, and {cfg['num_samples']} samples per condition.",
         "",
-        f"## 1. Python/NumPy vs. Multi-Threaded Rust Speed (`n={spd['n']}` -> {spd['entries']:,} codewords, `u={spd['u']}`)",
+        f"## 1. Python/NumPy vs. Multi-Threaded Rust Speed at `n={spd['n']}` ({spd['entries']:,} codewords, `u={spd['u']}`)",
         "",
         "| Metric | Python/NumPy (ms) | Rust Native (ms) | Speedup |",
         "| --- | ---: | ---: | ---: |",
@@ -304,14 +303,14 @@ def render_markdown_summary(results: dict[str, Any]) -> str:
             f"{by_pair[(method, atk)] * 100:.1f}%"
             for atk in ("clean", "word_deletion", "word_insertion", "synonym_swap", "paraphrase")
         ]
-        lines.append(f"| **{method}** | " + " | ".join(vals) + " |")
+        lines.append(f"| {method} | " + " | ".join(vals) + " |")
 
     lines.extend(
         [
             "",
-            "## 3. ROC / AUROC & Entropy Regimes",
+            "## 3. ROC, AUROC, and Entropy Regimes",
             "",
-            "| Method | AUROC | TPR @ 1% FPR | Base Match | Instruct Match |",
+            "| Method | AUROC | TPR at 1% FPR | Base Match | Instruct Match |",
             "| --- | ---: | ---: | ---: | ---: |",
         ]
     )
@@ -320,7 +319,7 @@ def render_markdown_summary(results: dict[str, Any]) -> str:
         b_mr = results["entropy_regime_match_rate"]["base"][method]
         i_mr = results["entropy_regime_match_rate"]["instruct"][method]
         lines.append(
-            f"| **{method}** | {roc['auroc']:.4f} | {roc['tpr_at_1pct_fpr'] * 100:.1f}% | "
+            f"| {method} | {roc['auroc']:.4f} | {roc['tpr_at_1pct_fpr'] * 100:.1f}% | "
             f"{b_mr * 100:.1f}% | {i_mr * 100:.1f}% |"
         )
 

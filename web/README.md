@@ -1,32 +1,19 @@
-# React + TypeScript + Vite
+# Look It Up Web Studio
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This frontend runs the watermarking studio directly in the browser with React 19, TypeScript, Vite, and Tailwind CSS v4. Every cryptographic hash, codebook search, BCH syndrome solve, and attack diff executes client-side through `public/llmw_wasm.wasm`, a `64,001`-byte binary compiled from `crates/llmw-wasm` and loaded by [llmwWasm.ts](src/wasm/llmwWasm.ts).
 
-Currently, two official plugins are available:
+Language generation and adversarial attacks in standalone mode use synchronized N-gram tables and lexicons in [modelData.json](src/engine/modelData.json) plus benchmark snapshots in `public/benchmarks.json`. Whenever Rust or Python lexicons change, regenerate those static assets from the repository root with `python scripts/export_web_assets.py`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+If you want real HuggingFace tokenizers and logits instead of the built-in N-gram model, start the optional Python backend (`uvicorn llmw_codebook.api:app --port 8000`) locally. [apiClient.ts](src/engine/apiClient.ts) checks port 8000 at startup and routes embed, extract, and attack calls there when available.
 
-## React Compiler
+## Development Commands
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Run these commands from inside `web/`:
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run test
+npm run lint
+npm run build
+npm run dev
 ```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
