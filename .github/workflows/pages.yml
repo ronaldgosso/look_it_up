@@ -1,0 +1,73 @@
+name: Deploy Web Studio to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "crates/llmw-core/**"
+      - "crates/llmw-wasm/**"
+      - "web/**"
+      - "benchmarks/results.json"
+      - "scripts/export_web_assets.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Static WASM Studio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Compile llmw_wasm.wasm release artifact
+        run: |
+          cargo build --target wasm32-unknown-unknown --release -p llmw-wasm
+          cp target/wasm32-unknown-unknown/release/llmw_wasm.wasm web/public/llmw_wasm.wasm
+
+      - name: Test and build Vite production bundle
+        working-directory: web
+        run: |
+          npm ci
+          npm run test
+          npm run build
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -153,7 +153,7 @@ export function BchAnalyzerPanel({
               />
               <text
                 x={toX(n) + 8}
-                y={toY(currentT) - 6}
+                y={toY(currentT) + 16}
                 fill="#FCD34D"
                 fontSize="10"
                 fontFamily="monospace"
