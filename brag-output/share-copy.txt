@@ -1,0 +1,1 @@
+Ever deleted a few words from AI text and watched positional watermarks crumble? Look It Up pairs Uniform Linear GF(2) codebooks with a Rust-accelerated Myers Levenshtein decoder (55.94x parallel speedup, 64 KB in browser WASM) to recover 100% of multi-bit IDs even after edits.

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../assets/studio.css" />
+    <script src="../assets/vendor/gsap.min.js"></script>
+  </head>
+  <body>
+    <div id="scene-2-comp" data-composition-id="scene-2" data-width="1920" data-height="1080">
+      <div class="tutorial-stage" id="s2-stage">
+        <div class="step-headline-row">
+          <h2 class="step-heading">1. Steer green tokens <span style="color:var(--accent)">+δ</span></h2>
+          <p class="step-takeaway">Embed hidden bit <strong>b[3] = 1</strong> without breaking prose.</p>
+        </div>
+
+        <div class="split-columns">
+          <div class="sketch-card">
+            <div class="sketch-img-wrap">
+              <img src="../assets/illustrations/01-logit-bias.png" alt="Xiaohei balancing +δ bias onto V1 pebble" />
+            </div>
+            <div class="sketch-footer" data-layout-ignore>
+              <span class="sketch-cap-label">IDEA SKETCH · 01</span>
+              <span class="sketch-cap-text">Tiny +δ weight tips V1 gently while text stays natural</span>
+            </div>
+          </div>
+
+          <div class="studio-panel" id="s2-panel">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-dot"></span>
+                <span>Logit Step Inspector</span>
+                <span class="pill" data-layout-ignore style="padding:4px 10px;font-size:13px;">t = 4 / 12</span>
+              </div>
+              <div class="studio-btn" id="s2-flip-btn" data-layout-ignore>Next Flip (+2.0)</div>
+            </div>
+
+            <div class="inset-box" data-layout-ignore>
+              <div style="font-size:13px;font-family:var(--font-mono);color:var(--ink-muted);margin-bottom:10px;">
+                Watermarked Token Output · Codeword ID 1337
+              </div>
+              <div class="token-stream">
+                <span class="tok-chip">Language</span>
+                <span class="tok-chip">model</span>
+                <span class="tok-chip">watermarking</span>
+                <span class="tok-chip">embeds</span>
+                <span class="tok-chip" id="s2-target-tok">an undetectable</span>
+                <span class="tok-chip tok-chip-v1">signal</span>
+              </div>
+            </div>
+
+            <div class="inset-box logit-bars" data-layout-ignore>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:15px;color:var(--ink-secondary);">V1 vs V0 Candidate Race</span>
+                <span class="pill" id="s2-bias-badge">Pre-bias Check</span>
+              </div>
+
+              <div>
+                <div class="bar-row-meta">
+                  <span style="color:var(--accent-ink);">V1 peak: "undetectable"</span>
+                  <span id="s2-v1-score" style="color:var(--accent-ink);">6.12</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill-v1" id="s2-v1-bar"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="bar-row-meta">
+                  <span style="color:var(--danger-ink);">V0 peak: "invisible"</span>
+                  <span style="color:var(--ink-secondary);">6.95</span>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill-v0"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="metrics-mini-grid">
+              <div class="mini-stat">
+                <div class="mini-stat-label" data-layout-ignore>Codebit Target</div>
+                <div class="mini-stat-val" style="color:var(--accent-ink);">b[3] = 1</div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-label" data-layout-ignore>Bias Delta</div>
+                <div class="mini-stat-val">
+                  <span id="s2-delta-pre">+0.0</span><span id="s2-delta-post" style="display:none;color:var(--accent-ink);">+2.0</span>
+                </div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-label" data-layout-ignore>Picked Partition</div>
+                <div class="mini-stat-val">
+                  <span id="s2-picked-pre">V0</span><span id="s2-picked-post" style="display:none;color:var(--accent-ink);">V1 (Match)</span>
+                </div>
+              </div>
+            </div>
+
+            <svg id="s2-cursor" class="sim-cursor" style="right:96px;top:38px;opacity:0;" viewBox="0 0 28 28">
+              <path
+                d="M4 2 L24 14 L15 17 L19 25 L15 27 L11 18 L4 22 Z"
+                fill="#F8FAFC"
+                stroke="#090E1A"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#s2-stage', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power3.out' }, 0);
+      // Click lands at local t=1.65s -> global t=4.80s (musical beat)
+      tl.to('#s2-cursor', { opacity: 1, x: 18, y: 8, duration: 0.42, ease: 'power2.out' }, 1.12);
+      tl.to('#s2-flip-btn', { scale: 0.94, duration: 0.08 }, 1.63);
+      tl.to('#s2-flip-btn', { scale: 1.0, duration: 0.14 }, 1.71);
+      tl.to('#s2-v1-bar', { width: '88%', duration: 0.45, ease: 'power3.out' }, 1.65);
+      tl.set('#s2-v1-score', { textContent: '6.12 -> 8.12 (+2.0)' }, 1.70);
+      tl.set('#s2-delta-pre', { display: 'none' }, 1.70);
+      tl.set('#s2-delta-post', { display: 'inline' }, 1.70);
+      tl.set('#s2-picked-pre', { display: 'none' }, 1.70);
+      tl.set('#s2-picked-post', { display: 'inline' }, 1.70);
+      tl.set('#s2-target-tok', { className: 'tok-chip tok-chip-v1' }, 1.70);
+      tl.to('#s2-bias-badge', { backgroundColor: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.55)', color: '#86efac', duration: 0.25 }, 1.70);
+      tl.set('#s2-bias-badge', { textContent: 'BIAS FLIPPED' }, 1.70);
+      tl.to('#s2-cursor', { opacity: 0, duration: 0.28 }, 2.40);
+      tl.to('#s2-stage', { opacity: 0, duration: 0.28, ease: 'power2.in' }, 5.30);
+      window.__timelines['scene-2'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../assets/studio.css" />
+    <script src="../assets/vendor/gsap.min.js"></script>
+  </head>
+  <body>
+    <div id="chrome-comp" data-composition-id="chrome" data-width="1920" data-height="1080">
+      <header id="studio-chrome" class="studio-chrome" data-layout-ignore>
+        <div class="chrome-brand">
+          <div class="chrome-logo-box">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width:100%;height:100%">
+              <path fill="#F8FAFC" d="M 24 62 H 50 L 115 127 V 216 H 102 L 24 138 Z" />
+              <path fill="#F8FAFC" d="M 232 62 H 206 L 141 127 V 216 H 154 L 232 138 Z" />
+              <polygon fill="#22C55E" points="128,20 172,64 128,108 84,64" />
+            </svg>
+          </div>
+          <div>
+            <div class="chrome-title">Look It Up Studio</div>
+            <div class="chrome-sub">arXiv:2611.16890 · Tutorial Walkthrough</div>
+          </div>
+        </div>
+        <div class="chrome-pills">
+          <span class="pill">n=12 · u=127 · δ=2.0</span>
+          <span class="pill">ID 1337</span>
+          <span class="pill pill-emerald" id="chrome-step-pill">STEP 01 / 03</span>
+        </div>
+      </header>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#studio-chrome', { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' }, 0);
+      tl.set('#chrome-step-pill', { textContent: 'STEP 01 / 03' }, 0);
+      tl.set('#chrome-step-pill', { textContent: 'STEP 02 / 03' }, 5.60);
+      tl.set('#chrome-step-pill', { textContent: 'STEP 03 / 03' }, 12.00);
+      tl.to('#studio-chrome', { opacity: 0, duration: 0.25, ease: 'power2.in' }, 16.52);
+      window.__timelines['chrome'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

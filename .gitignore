@@ -28,3 +28,12 @@ target/
 *.log
 .DS_Store
 Thumbs.db
+
+# Hyperframes cache & intermediate render scratch files
+brag-output/composition/.hyperframes/
+brag-output/work/snapshots*/
+brag-output/work/*.mp4
+brag-output/work/*.wav
+brag-output/work/*.png
+brag-output/work/*.jpg
+brag-output/work/*.html

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Look It Up — Multi-bit LLM Watermarking Tutorial</title>
+    <link rel="stylesheet" href="assets/studio.css" />
+    <script src="assets/vendor/gsap.min.js"></script>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="root"
+      data-start="0"
+      data-duration="24"
+      data-width="1920"
+      data-height="1080"
+      data-fps="30"
+    >
+      <div class="studio-bg-grid"></div>
+
+      <audio
+        id="bg-music"
+        src="assets/music/lookitup-soothing-ambient.mp3"
+        data-start="0"
+        data-duration="24"
+        data-volume="0.92"
+        data-fade-out="1.2"
+      ></audio>
+
+      <div
+        id="clip-scene-1"
+        class="clip"
+        data-composition-id="scene-1"
+        data-composition-src="compositions/scene-1.html"
+        data-start="0"
+        data-duration="3.15"
+        data-track-index="0"
+      ></div>
+
+      <div
+        id="clip-chrome"
+        class="clip"
+        data-composition-id="chrome"
+        data-composition-src="compositions/chrome.html"
+        data-start="3.15"
+        data-duration="16.80"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="clip-scene-2"
+        class="clip"
+        data-composition-id="scene-2"
+        data-composition-src="compositions/scene-2.html"
+        data-start="3.15"
+        data-duration="5.60"
+        data-track-index="0"
+      ></div>
+
+      <div
+        id="clip-scene-3"
+        class="clip"
+        data-composition-id="scene-3"
+        data-composition-src="compositions/scene-3.html"
+        data-start="8.75"
+        data-duration="6.40"
+        data-track-index="0"
+      ></div>
+
+      <div
+        id="clip-scene-4"
+        class="clip"
+        data-composition-id="scene-4"
+        data-composition-src="compositions/scene-4.html"
+        data-start="15.15"
+        data-duration="4.80"
+        data-track-index="0"
+      ></div>
+
+      <div
+        id="clip-scene-5"
+        class="clip"
+        data-composition-id="scene-5"
+        data-composition-src="compositions/scene-5.html"
+        data-start="19.95"
+        data-duration="4.05"
+        data-track-index="0"
+      ></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines['root'] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

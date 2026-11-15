@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../assets/studio.css" />
+    <script src="../assets/vendor/gsap.min.js"></script>
+  </head>
+  <body>
+    <div id="scene-5-comp" data-composition-id="scene-5" data-width="1920" data-height="1080">
+      <div class="scene-5-wrap" id="s5-stage">
+        <div class="terminal-card" id="s5-term">
+          <div class="terminal-bar" data-layout-ignore>
+            <div class="term-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span class="chrome-sub">Try Look It Up locally</span>
+            <span class="pill pill-emerald" style="padding:4px 12px;font-size:13px;">Zero Cloud Needed</span>
+          </div>
+          <div class="term-body">
+            <div id="s5-line1"><span class="term-prompt">$</span><span class="term-cmd">cargo build --release -p llmw-native</span></div>
+            <div id="s5-line2" style="margin-top:8px;"><span class="term-prompt">$</span><span class="term-cmd">cd web &amp;&amp; npm run dev</span></div>
+            <div
+              id="s5-line3"
+              data-layout-ignore
+              style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);font-size:20px;color:var(--accent-ink);"
+            >
+              Ready · Offline WASM (64,001 B) loaded locally
+            </div>
+          </div>
+        </div>
+
+        <div class="outro-brand-col" id="s5-brand">
+          <div class="outro-logo-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width:100%;height:100%">
+              <path fill="#F8FAFC" d="M 24 62 H 50 L 115 127 V 216 H 102 L 24 138 Z" />
+              <path fill="#F8FAFC" d="M 232 62 H 206 L 141 127 V 216 H 154 L 232 138 Z" />
+              <polygon fill="#22C55E" points="128,20 172,64 128,108 84,64" />
+            </svg>
+          </div>
+          <h2 class="outro-title">Look It Up</h2>
+          <p class="outro-tag">Multi-bit LLM Watermarking Studio.<br />Open-source Rust &amp; WebAssembly.</p>
+          <div class="hero-meta" style="margin-top:6px;" data-layout-ignore>
+            <span>arXiv:2611.16890</span>
+            <span style="color:#475569">·</span>
+            <span style="color:var(--accent-ink)">GPL-3.0 License</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#s5-stage', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.40, ease: 'power3.out' }, 0);
+      tl.fromTo('#s5-line1', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.25 }, 0.20);
+      tl.fromTo('#s5-line2', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.25 }, 0.45);
+      tl.fromTo('#s5-line3', { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.30 }, 0.80);
+      tl.to('#s5-stage', { opacity: 0, duration: 0.55, ease: 'power2.inOut' }, 3.45);
+      window.__timelines['scene-5'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

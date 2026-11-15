@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../assets/studio.css" />
+    <script src="../assets/vendor/gsap.min.js"></script>
+  </head>
+  <body>
+    <div id="scene-1-comp" data-composition-id="scene-1" data-width="1920" data-height="1080">
+      <div class="scene-1-wrap" id="s1-stage">
+        <div class="hero-aperture-box" id="s1-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" style="width:100%;height:100%">
+            <path id="s1-left-wing" fill="#F8FAFC" d="M 24 62 H 50 L 115 127 V 216 H 102 L 24 138 Z" />
+            <path id="s1-right-wing" fill="#F8FAFC" d="M 232 62 H 206 L 141 127 V 216 H 154 L 232 138 Z" />
+            <polygon id="s1-gem" fill="#22C55E" points="128,20 172,64 128,108 84,64" />
+          </svg>
+        </div>
+        <h1 class="hero-title" id="s1-title">
+          Watermark AI text.<br /><span>Recover every bit.</span>
+        </h1>
+        <p class="hero-sub" id="s1-sub">Zero visible trace. Verified in milliseconds.</p>
+        <div class="hero-meta" id="s1-meta" data-layout-ignore>
+          <span>Look It Up Studio</span>
+          <span style="color:#475569">·</span>
+          <span style="color:var(--accent-ink)">Rust + 64 KB WebAssembly</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#s1-left-wing', { x: -16, opacity: 0.25 }, { x: 0, opacity: 1, duration: 0.50, ease: 'power3.out' }, 0);
+      tl.fromTo('#s1-right-wing', { x: 16, opacity: 0.25 }, { x: 0, opacity: 1, duration: 0.50, ease: 'power3.out' }, 0);
+      tl.fromTo('#s1-gem', { scale: 0.65, transformOrigin: '50% 50%', opacity: 0 }, { scale: 1, opacity: 1, duration: 0.55, ease: 'back.out(1.4)' }, 0.04);
+      tl.fromTo('#s1-title', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out' }, 0.22);
+      tl.fromTo('#s1-sub', { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.40, ease: 'power2.out' }, 0.55);
+      tl.fromTo('#s1-meta', { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: 'power2.out' }, 0.72);
+      tl.to('#s1-stage', { opacity: 0, duration: 0.28, ease: 'power2.in' }, 2.84);
+      window.__timelines['scene-1'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
